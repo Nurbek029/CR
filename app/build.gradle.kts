@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.okhttp"
+    namespace = "com.example.kp"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.okhttp"
+        applicationId = "com.example.kp"
         minSdk = 28
         targetSdk = 36
         versionCode = 1
@@ -32,19 +32,35 @@ android {
 }
 
 dependencies {
-// https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
-    implementation("com.squareup.okhttp3:okhttp:5.1.0")
-
-    // https://mvnrepository.com/artifact/com.squareup.okhttp3/logging-interceptor
-    implementation("com.squareup.okhttp3:logging-interceptor:5.1.0")
-    // https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit
-    implementation("com.squareup.retrofit2:retrofit:3.0.0")
-    // https://mvnrepository.com/artifact/com.squareup.retrofit2/converter-gson
-    implementation("com.squareup.retrofit2:converter-gson:3.0.0")
+    // Основные Android библиотеки (из libs.versions.toml)
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+
+    // Дополнительные библиотеки (прямое указание)
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
+    implementation("androidx.cardview:cardview:1.0.0")
+
+    // ViewModel и LiveData
+    implementation("androidx.lifecycle:lifecycle-viewmodel:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-livedata:2.7.0")
+
+    // Room Database
+    implementation("androidx.room:room-runtime:2.6.1")
+    annotationProcessor("androidx.room:room-compiler:2.6.1")
+
+    // Retrofit и OkHttp
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.12")
+    implementation("com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.12")
+
+    // Glide для загрузки изображений
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+
+    // Тестирование (из libs.versions.toml)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

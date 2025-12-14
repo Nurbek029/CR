@@ -1,6 +1,125 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/main"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#222" />
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <!-- Toolbar -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="96dp"
+        android:background="?attr/colorPrimary"
+        app:menu="@menu/main_menu"
+        app:title="Спортивные клубы"
+        app:titleTextColor="@android:color/white" />
+
+    <!-- Временная кнопка для отладки API -->
+    <Button
+        android:id="@+id/debugApiButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="DEBUG: Проверить API"
+        android:backgroundTint="@android:color/holo_orange_dark"
+        android:layout_margin="8dp"
+        android:visibility="visible" />
+
+    <!-- Поиск -->
+    <androidx.appcompat.widget.SearchView
+        android:id="@+id/searchView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:queryHint="Поиск клубов или лиг..."
+        app:iconifiedByDefault="false" />
+
+    <!-- Состояние загрузки/ошибки -->
+    <LinearLayout
+        android:id="@+id/stateContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/errorTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Ошибка загрузки"
+            android:textColor="@android:color/holo_red_dark"
+            android:textSize="16sp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/emptyTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Нет команд для отображения"
+            android:textSize="16sp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+    <!-- Фильтры -->
+    <LinearLayout
+        android:id="@+id/filtersContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="8dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:visibility="visible">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Фильтр:"
+            android:textStyle="bold"
+            android:layout_marginEnd="8dp" />
+
+        <Spinner
+            android:id="@+id/leagueSpinner"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp" />
+
+        <Spinner
+            android:id="@+id/countrySpinner"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <Button
+            android:id="@+id/resetFilterButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Сброс"
+            android:layout_marginStart="8dp" />
+
+    </LinearLayout>
+
+    <!-- RecyclerView со списком команд -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="4dp"
+        android:visibility="visible" />
+
+</LinearLayout>

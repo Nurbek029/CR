@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
-public class TeamResponse {
-    @SerializedName("teams")
-    public List<Team> teams;
+public class PlayerResponse {
+    @SerializedName("player")
+    public List<Player> player;
 }
