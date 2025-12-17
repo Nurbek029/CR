@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/nav_teams"
+        android:icon="@android:drawable/ic_menu_search"
+        android:title="Команды" />
+
+    <item
+        android:id="@+id/nav_favorites"
+        android:icon="@android:drawable/btn_star_big_on"
+        android:title="Избранное" />
+
+    <item
+        android:id="@+id/nav_refresh"
+        android:icon="@android:drawable/ic_menu_rotate"
+        android:title="Обновить" />
+
+</menu>

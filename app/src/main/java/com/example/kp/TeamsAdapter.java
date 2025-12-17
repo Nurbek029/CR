@@ -1,4 +1,3 @@
-// TeamsAdapter.java
 package com.example.kp;
 
 import android.view.LayoutInflater;
@@ -11,12 +10,12 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import java.util.ArrayList;
 import java.util.List;
 
 public class TeamsAdapter extends ListAdapter<Team, TeamsAdapter.TeamViewHolder> {
     private OnTeamClickListener listener;
-    private List<Team> teams = new ArrayList<>();
 
     public interface OnTeamClickListener {
         void onTeamClick(Team team);
@@ -38,9 +37,7 @@ public class TeamsAdapter extends ListAdapter<Team, TeamsAdapter.TeamViewHolder>
                 @Override
                 public boolean areContentsTheSame(@NonNull Team oldItem, @NonNull Team newItem) {
                     return oldItem.strTeam.equals(newItem.strTeam) &&
-                            oldItem.isFavorite == newItem.isFavorite &&
-                            oldItem.rating == newItem.rating &&
-                            oldItem.comment.equals(newItem.comment);
+                            oldItem.isFavorite == newItem.isFavorite;
                 }
             };
 
@@ -54,18 +51,16 @@ public class TeamsAdapter extends ListAdapter<Team, TeamsAdapter.TeamViewHolder>
 
     @Override
     public void onBindViewHolder(@NonNull TeamViewHolder holder, int position) {
-        Team team = getItem(position);
+        Team team = getItem(position); // Важно: используем getItem от ListAdapter
         holder.bind(team, listener);
     }
 
-    @Override
-    public int getItemCount() {
-        return teams != null ? teams.size() : 0;
-    }
+    // УДАЛЕНО: метод getItemCount() - ListAdapter сам управляет размером
+    // УДАЛЕНО: поле private List<Team> teams и связанная с ним логика
 
     public void setTeams(List<Team> teams) {
-        this.teams = teams != null ? teams : new ArrayList<>();
-        submitList(new ArrayList<>(this.teams)); // Создаем копию для ListAdapter
+        // Используем submitList для обновления данных в ListAdapter
+        submitList(teams != null ? new ArrayList<>(teams) : new ArrayList<>());
     }
 
     static class TeamViewHolder extends RecyclerView.ViewHolder {
@@ -87,17 +82,25 @@ public class TeamsAdapter extends ListAdapter<Team, TeamsAdapter.TeamViewHolder>
         }
 
         public void bind(Team team, OnTeamClickListener listener) {
-            teamName.setText(team.strTeam);
-            teamLeague.setText(team.strLeague);
-            teamCountry.setText(team.strCountry);
-            teamSport.setText(team.strSport);
+            teamName.setText(team.strTeam != null ? team.strTeam : "");
+            teamLeague.setText(team.strLeague != null ? team.strLeague : "");
+            teamCountry.setText(team.strCountry != null ? team.strCountry : "");
+            teamSport.setText(team.strSport != null ? team.strSport : "");
 
+            // Исправляем ошибку загрузки изображений
             if (team.strBadge != null && !team.strBadge.isEmpty()) {
+                // Используем Glide с обработкой ошибок
                 Glide.with(itemView.getContext())
                         .load(team.strBadge)
+                        .transition(DrawableTransitionOptions.withCrossFade())
+                        .placeholder(R.drawable.ic_soccer)
+                        .error(R.drawable.ic_soccer)
                         .into(teamBadge);
+            } else {
+                teamBadge.setImageResource(R.drawable.ic_soccer);
             }
 
+            // Обновляем иконку избранного
             favoriteIcon.setImageResource(
                     team.isFavorite ? R.drawable.ic_favorite_filled : R.drawable.ic_favorite_border
             );

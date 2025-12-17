@@ -13,19 +13,6 @@ public class RetrofitClient {
     // Убедитесь, что BASE_URL соответствует вашему mock-серверу
     private static final String BASE_URL = "https://02721d2d-8318-4cfe-ab98-2bd86c41dd8b.mock.pstmn.io/";
 
-    // Тестовые URL для разных лиг
-    public static final String[] TEST_URLS = {
-            BASE_URL + "search_all_teams.php?l=English%20Premier%20League",
-            BASE_URL + "search_all_teams.php?l=Spanish%20La%20Liga",
-            BASE_URL + "search_all_teams.php?l=German%20Bundesliga",
-            BASE_URL + "search_all_teams.php?l=Italian%20Serie%20A",
-            BASE_URL + "search_all_teams.php?l=French%20Ligue%201",
-            BASE_URL + "search_all_teams.php?l=Dutch%20Eredivisie",
-            BASE_URL + "search_all_teams.php?l=Portuguese%20Primeira%20Liga",
-            BASE_URL + "search_all_teams.php?l=Brazilian%20Serie%20A",
-            BASE_URL + "search_all_teams.php?l=Argentine%20Primera%20Division"
-    };
-
     public static Retrofit getInstance() {
         if (retrofit == null) {
             HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
@@ -45,16 +32,29 @@ public class RetrofitClient {
                     .build();
 
             android.util.Log.d("RETROFIT", "Retrofit клиент создан для URL: " + BASE_URL);
-            android.util.Log.d("RETROFIT", "Доступно эндпоинтов лиг: " + TEST_URLS.length);
         }
         return retrofit;
     }
 
-    // Метод для тестирования всех эндпоинтов
-    public static void testAllEndpoints() {
-        android.util.Log.d("RETROFIT", "Тестирование всех эндпоинтов лиг:");
-        for (String url : TEST_URLS) {
-            android.util.Log.d("RETROFIT", "URL: " + url);
+    // Метод для проверки URL лиг
+    public static String[] getLeagueUrls() {
+        String[] leagues = {
+                "English Premier League",
+                "Spanish La Liga",
+                "German Bundesliga",
+                "Italian Serie A",
+                "French Ligue 1"
+        };
+
+        String[] urls = new String[leagues.length];
+        for (int i = 0; i < leagues.length; i++) {
+            try {
+                String encoded = java.net.URLEncoder.encode(leagues[i], "UTF-8");
+                urls[i] = BASE_URL + "search_all_teams.php?l=" + encoded;
+            } catch (Exception e) {
+                urls[i] = BASE_URL + "search_all_teams.php?l=" + leagues[i].replace(" ", "%20");
+            }
         }
+        return urls;
     }
 }

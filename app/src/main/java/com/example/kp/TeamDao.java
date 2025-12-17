@@ -6,7 +6,6 @@ import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
-
 import java.util.List;
 
 @Dao
@@ -28,4 +27,7 @@ public interface TeamDao {
 
     @Query("DELETE FROM favorite_teams WHERE idTeam = :id")
     void deleteById(String id);
+
+    @Query("DELETE FROM favorite_teams")
+    void deleteAll();
 }

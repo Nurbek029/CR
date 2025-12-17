@@ -3,15 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/action_refresh"
-        android:title="Обновить"
-        android:icon="@android:drawable/ic_menu_rotate"
-        app:showAsAction="ifRoom" />
-
-    <item
         android:id="@+id/action_favorites"
-        android:title="Избранное"
         android:icon="@android:drawable/btn_star_big_on"
+        android:title="Избранное"
         app:showAsAction="ifRoom" />
 
 </menu>

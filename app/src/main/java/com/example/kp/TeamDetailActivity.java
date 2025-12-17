@@ -1,11 +1,14 @@
-// TeamDetailActivity.java
 package com.example.kp;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,94 +17,93 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.google.android.material.snackbar.Snackbar;
-import java.util.ArrayList;
+import java.io.Serializable;
 import java.util.List;
 
 public class TeamDetailActivity extends AppCompatActivity {
     private TeamsViewModel viewModel;
     private String teamId;
     private Team currentTeam;
+    private PlayersAdapter playersAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_team_detail);
 
-        teamId = getIntent().getStringExtra("TEAM_ID");
-        if (teamId == null) {
+        // Получаем ВСЮ команду из Intent
+        currentTeam = (Team) getIntent().getSerializableExtra("TEAM");
+        if (currentTeam == null || currentTeam.idTeam == null || currentTeam.idTeam.isEmpty()) {
+            Snackbar.make(findViewById(android.R.id.content),
+                    "Ошибка: данные команды не получены", Snackbar.LENGTH_LONG).show();
             finish();
             return;
         }
 
+        teamId = currentTeam.idTeam;
         viewModel = new ViewModelProvider(this).get(TeamsViewModel.class);
 
-        // Наблюдатель за загруженными командами
-        viewModel.getTeams().observe(this, resource -> {
-            if (resource != null) {
-                switch (resource.status) {
-                    case SUCCESS:
-                        if (resource.data != null) {
-                            for (Team team : resource.data) {
-                                if (team.idTeam.equals(teamId)) {
-                                    currentTeam = team;
-                                    displayTeamDetails(team);
-                                    break;
-                                }
-                            }
-                        }
-                        break;
-                    case ERROR:
-                        showError(resource.message);
-                        break;
-                    case LOADING:
-                        // Показать индикатор загрузки
-                        break;
-                }
-            }
-        });
+        // Сразу отображаем данные команды
+        displayTeamDetails(currentTeam);
 
-        // Наблюдатель за игроками
-        viewModel.getPlayers().observe(this, resource -> {
-            if (resource != null) {
-                switch (resource.status) {
-                    case SUCCESS:
-                        if (resource.data != null && !resource.data.isEmpty()) {
-                            displayPlayers(resource.data);
-                        }
-                        break;
-                    case ERROR:
-                        showError(resource.message);
-                        break;
-                    case LOADING:
-                        // Показать индикатор загрузки
-                        break;
-                }
-            }
-        });
+        // Настройка RecyclerView для игроков
+        setupPlayersRecyclerView();
 
-        // Наблюдатель за данными команды из базы
-        viewModel.getTeamByIdFromDb(teamId).observe(this, team -> {
-            if (team != null && currentTeam != null) {
-                // Обновляем текущую команду данными из базы
-                currentTeam.comment = team.comment;
-                currentTeam.rating = team.rating;
-                currentTeam.isFavorite = team.isFavorite;
+        // Отображаем игроков (если они есть в объекте команды)
+        displayTeamPlayers(currentTeam.keyPlayers);
 
-                // Обновляем UI
-                updateFavoriteButton();
-                updateCommentFields();
-            }
-        });
-
-        // Загрузить данные
-        viewModel.setCurrentLeague("English Premier League");
-        viewModel.loadTeamPlayers(teamId);
+        // Наблюдатель за данными команды из базы (для избранного)
+        setupDatabaseObserver();
 
         setupButtons();
     }
 
+    private void setupPlayersRecyclerView() {
+        RecyclerView playersRecyclerView = findViewById(R.id.playersRecyclerView);
+
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this) {
+            @Override
+            public boolean canScrollVertically() {
+                return true;
+            }
+        };
+
+        playersRecyclerView.setLayoutManager(layoutManager);
+
+        // Обработка кликов на игроков - показываем диалог
+        playersAdapter = new PlayersAdapter(new PlayersAdapter.OnPlayerClickListener() {
+            @Override
+            public void onPlayerClick(Player player) {
+                // Показываем диалог с деталями игрока
+                showPlayerDialog(player);
+            }
+        });
+        playersRecyclerView.setAdapter(playersAdapter);
+
+        playersRecyclerView.setNestedScrollingEnabled(true);
+    }
+
+    // Метод для показа диалога с игроком
+    private void showPlayerDialog(Player player) {
+        PlayerDialogFragment dialog = PlayerDialogFragment.newInstance(player);
+        dialog.show(getSupportFragmentManager(), "player_dialog");
+    }
+
+    private void setupDatabaseObserver() {
+        // Наблюдаем за изменениями избранного в базе данных
+        viewModel.getTeamByIdFromDb(teamId).observe(this, teamFromDb -> {
+            if (teamFromDb != null && currentTeam != null) {
+                // Обновляем данные из базы
+                currentTeam.comment = teamFromDb.comment;
+                currentTeam.rating = teamFromDb.rating;
+                currentTeam.isFavorite = teamFromDb.isFavorite;
+                updateFavoriteButton();
+                updateCommentFields();
+            }
+        });
+    }
+
     private void setupButtons() {
-        // Кнопка добавления в избранное
         Button favoriteButton = findViewById(R.id.favoriteButton);
         favoriteButton.setOnClickListener(v -> {
             if (currentTeam != null) {
@@ -117,7 +119,6 @@ public class TeamDetailActivity extends AppCompatActivity {
             }
         });
 
-        // Сохранение комментария и оценки
         Button saveCommentButton = findViewById(R.id.saveCommentButton);
         saveCommentButton.setOnClickListener(v -> {
             EditText commentEditText = findViewById(R.id.commentEditText);
@@ -128,6 +129,20 @@ public class TeamDetailActivity extends AppCompatActivity {
 
             viewModel.updateTeamComment(teamId, comment, rating);
             Snackbar.make(v, "Комментарий сохранен", Snackbar.LENGTH_SHORT).show();
+        });
+
+        // Кнопка показать/скрыть игроков
+        Button togglePlayersButton = findViewById(R.id.togglePlayersButton);
+        LinearLayout playersSection = findViewById(R.id.playersSection);
+
+        togglePlayersButton.setOnClickListener(v -> {
+            if (playersSection.getVisibility() == View.VISIBLE) {
+                playersSection.setVisibility(View.GONE);
+                togglePlayersButton.setText("Показать состав");
+            } else {
+                playersSection.setVisibility(View.VISIBLE);
+                togglePlayersButton.setText("Скрыть состав");
+            }
         });
     }
 
@@ -140,19 +155,40 @@ public class TeamDetailActivity extends AppCompatActivity {
         TextView description = findViewById(R.id.teamDescription);
         ImageView badge = findViewById(R.id.teamBadge);
 
-        name.setText(team.strTeam);
-        league.setText(team.strLeague);
-        country.setText(team.strCountry);
-        stadium.setText(team.strStadium);
-        year.setText(team.intFormedYear);
-        description.setText(team.strDescriptionEN);
+        name.setText(team.strTeam != null ? team.strTeam : "Нет названия");
+        league.setText(team.strLeague != null ? team.strLeague : "Лига не указана");
+        country.setText(team.strCountry != null ? "Страна: " + team.strCountry : "");
+        stadium.setText(team.strStadium != null ? "Стадион: " + team.strStadium : "");
+        year.setText(team.intFormedYear != null ? "Основан: " + team.intFormedYear : "");
+        description.setText(team.strDescriptionEN != null ? team.strDescriptionEN : "Описание отсутствует");
 
         if (team.strBadge != null && !team.strBadge.isEmpty()) {
-            Glide.with(this).load(team.strBadge).into(badge);
+            Glide.with(this)
+                    .load(team.strBadge)
+                    .placeholder(R.drawable.ic_soccer)
+                    .into(badge);
+        } else {
+            badge.setImageResource(R.drawable.ic_soccer);
         }
 
         updateFavoriteButton();
         updateCommentFields();
+    }
+
+    private void displayTeamPlayers(List<Player> players) {
+        LinearLayout playersSection = findViewById(R.id.playersSection);
+        TextView playersTitle = findViewById(R.id.playersTitle);
+        Button togglePlayersButton = findViewById(R.id.togglePlayersButton);
+
+        if (players != null && !players.isEmpty()) {
+            playersTitle.setText("Состав команды (" + players.size() + " игроков)");
+            playersAdapter.setPlayers(players);
+            togglePlayersButton.setVisibility(View.VISIBLE);
+        } else {
+            playersTitle.setText("Информация об игроках отсутствует");
+            togglePlayersButton.setVisibility(View.GONE);
+            playersSection.setVisibility(View.GONE);
+        }
     }
 
     private void updateFavoriteButton() {
@@ -164,30 +200,39 @@ public class TeamDetailActivity extends AppCompatActivity {
     }
 
     private void updateCommentFields() {
-        if (currentTeam != null && currentTeam.comment != null) {
+        if (currentTeam != null) {
             EditText commentEditText = findViewById(R.id.commentEditText);
             RatingBar ratingBar = findViewById(R.id.ratingBar);
-            commentEditText.setText(currentTeam.comment);
+            commentEditText.setText(currentTeam.comment != null ? currentTeam.comment : "");
             ratingBar.setRating(currentTeam.rating);
         }
     }
 
-    private void displayPlayers(List<Player> players) {
-        RecyclerView playersRecyclerView = findViewById(R.id.playersRecyclerView);
-        playersRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-        PlayersAdapter adapter = new PlayersAdapter(players);
-        playersRecyclerView.setAdapter(adapter);
+    // ★ ДОБАВЛЯЕМ МЕНЮ ДЛЯ ПЕРЕХОДА В ИЗБРАННЫЕ ★
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.team_detail_menu, menu);
+        return true;
     }
 
-    private void showError(String message) {
-        Snackbar.make(findViewById(android.R.id.content),
-                message, Snackbar.LENGTH_LONG).show();
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.action_favorites) {
+            // Переход в избранные
+            Intent intent = new Intent(this, FavoritesActivity.class);
+            startActivity(intent);
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
-    public static void start(AppCompatActivity activity, String teamId) {
+    // Метод для старта активити с передачей команды
+    public static void start(AppCompatActivity activity, Team team) {
         Intent intent = new Intent(activity, TeamDetailActivity.class);
-        intent.putExtra("TEAM_ID", teamId);
+        intent.putExtra("TEAM", team);
         activity.startActivity(intent);
     }
 }

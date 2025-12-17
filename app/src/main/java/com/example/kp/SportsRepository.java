@@ -17,17 +17,13 @@ public class SportsRepository {
     private final ApiService apiService;
     private static final String TAG = "SportsRepository";
 
-    // Карта лиг и их отображаемых названий
+    // Список лиг
     private final Map<String, String> leagueDisplayNames = new HashMap<String, String>() {{
         put("English Premier League", "Английская Премьер-лига");
         put("Spanish La Liga", "Испанская Ла Лига");
         put("German Bundesliga", "Немецкая Бундеслига");
         put("Italian Serie A", "Итальянская Серия А");
         put("French Ligue 1", "Французская Лига 1");
-        put("Dutch Eredivisie", "Нидерландская Эредивизи");
-        put("Portuguese Primeira Liga", "Португальская Примейра Лига");
-        put("Brazilian Serie A", "Бразильская Серия А");
-        put("Argentine Primera Division", "Аргентинская Примера Дивисьон");
     }};
 
     public SportsRepository(Application application) {
@@ -42,7 +38,7 @@ public class SportsRepository {
         android.util.Log.d(TAG, "Доступно лиг: " + leagueDisplayNames.size());
     }
 
-    // --- Работа с избранным (остается без изменений) ---
+    // --- Работа с избранным ---
     public void addToFavorites(Team team) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
             try {
@@ -119,7 +115,7 @@ public class SportsRepository {
         return leagueDisplayNames.getOrDefault(leagueKey, leagueKey);
     }
 
-    // Основной метод получения команд по лиге
+    // Основной метод получения команд по лиге - ТОЛЬКО API
     public LiveData<Resource<List<Team>>> getTeamsByLeague(String leagueName) {
         MutableLiveData<Resource<List<Team>>> result = new MutableLiveData<>();
         result.setValue(Resource.loading(null));
@@ -138,6 +134,7 @@ public class SportsRepository {
             return result;
         }
 
+        // ★ ВАЖНОЕ ИЗМЕНЕНИЕ: ДЛЯ ВСЕХ ЛИГ ИСПОЛЬЗУЕМ API ★
         Call<TeamResponse> call = apiService.getTeams(leagueName);
         call.enqueue(new Callback<TeamResponse>() {
             @Override
@@ -149,12 +146,13 @@ public class SportsRepository {
                     List<Team> teams = response.body().teams;
                     android.util.Log.d(TAG, "Получено команд: " + (teams != null ? teams.size() : 0));
 
-                    // Детальный лог первых 3 команд (если есть)
                     if (teams != null && !teams.isEmpty()) {
+                        // Логируем полученные команды для отладки
                         for (int i = 0; i < Math.min(3, teams.size()); i++) {
                             Team team = teams.get(i);
                             android.util.Log.d(TAG, "Команда " + (i+1) + ": " +
-                                    team.strTeam + " (ID: " + team.idTeam + ")");
+                                    team.strTeam + " (игроков: " +
+                                    (team.keyPlayers != null ? team.keyPlayers.size() : 0) + ")");
                         }
 
                         result.setValue(Resource.success(teams));
@@ -187,111 +185,7 @@ public class SportsRepository {
         return result;
     }
 
-    // Метод для получения команд из всех лиг
-    public LiveData<Resource<Map<String, List<Team>>>> getAllTeamsFromAllLeagues() {
-        MutableLiveData<Resource<Map<String, List<Team>>>> result = new MutableLiveData<>();
-        result.setValue(Resource.loading(null));
-
-        android.util.Log.d(TAG, "Запрос команд из всех лиг");
-
-        // Создаем мапу для результатов
-        Map<String, List<Team>> allTeams = new HashMap<>();
-        final int[] completedRequests = {0};
-        final int totalRequests = leagueDisplayNames.size();
-
-        for (String league : leagueDisplayNames.keySet()) {
-            Call<TeamResponse> call = apiService.getTeams(league);
-            call.enqueue(new Callback<TeamResponse>() {
-                @Override
-                public void onResponse(Call<TeamResponse> call, Response<TeamResponse> response) {
-                    if (response.isSuccessful() && response.body() != null && response.body().teams != null) {
-                        String leagueName = call.request().url().queryParameter("l");
-                        allTeams.put(leagueName, response.body().teams);
-                        android.util.Log.d(TAG, "Загружены команды для лиги: " + leagueName +
-                                " (" + response.body().teams.size() + " команд)");
-                    }
-
-                    completedRequests[0]++;
-                    if (completedRequests[0] >= totalRequests) {
-                        if (!allTeams.isEmpty()) {
-                            result.setValue(Resource.success(allTeams));
-                        } else {
-                            result.setValue(Resource.error("Не удалось загрузить команды из лиг", null));
-                        }
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<TeamResponse> call, Throwable t) {
-                    android.util.Log.e(TAG, "Ошибка загрузки лиги: " + call.request().url(), t);
-                    completedRequests[0]++;
-                    if (completedRequests[0] >= totalRequests) {
-                        if (!allTeams.isEmpty()) {
-                            result.setValue(Resource.success(allTeams));
-                        } else {
-                            result.setValue(Resource.error("Ошибка загрузки команд", null));
-                        }
-                    }
-                }
-            });
-        }
-
-        return result;
-    }
-
-    // Метод для поиска команд по названию во всех лигах
-    public LiveData<Resource<List<Team>>> searchTeamsGlobally(String query) {
-        MutableLiveData<Resource<List<Team>>> result = new MutableLiveData<>();
-        result.setValue(Resource.loading(null));
-
-        if (query == null || query.trim().isEmpty()) {
-            result.setValue(Resource.error("Пустой запрос поиска", null));
-            return result;
-        }
-
-        android.util.Log.d(TAG, "Глобальный поиск команд: " + query);
-
-        // Здесь можно реализовать поиск по всем лигам
-        // Пока возвращаем пустой результат, можно расширить функционал
-        result.setValue(Resource.success(new ArrayList<>()));
-
-        return result;
-    }
-
-    // Старый метод получения лиг (если нужен)
-    public LiveData<Resource<List<League>>> getLeagues() {
-        MutableLiveData<Resource<List<League>>> result = new MutableLiveData<>();
-        result.setValue(Resource.loading(null));
-
-        android.util.Log.d(TAG, "Запрос всех лиг");
-
-        // Создаем список лиг из нашей карты
-        new Thread(() -> {
-            try {
-                List<League> leagues = new ArrayList<>();
-                for (Map.Entry<String, String> entry : leagueDisplayNames.entrySet()) {
-                    League league = new League();
-                    // Генерируем ID на основе названия
-                    league.idLeague = String.valueOf(entry.getKey().hashCode());
-                    league.strLeague = entry.getKey();
-                    league.strSport = "Soccer";
-                    leagues.add(league);
-                }
-
-                Thread.sleep(500); // Имитация загрузки
-                android.util.Log.d(TAG, "Создано лиг: " + leagues.size());
-                result.postValue(Resource.success(leagues));
-
-            } catch (Exception e) {
-                android.util.Log.e(TAG, "Ошибка создания списка лиг: " + e.getMessage());
-                result.postValue(Resource.error("Ошибка загрузки лиг: " + e.getMessage(), null));
-            }
-        }).start();
-
-        return result;
-    }
-
-    // Метод для получения игроков команды (остается без изменений)
+    // Метод для получения игроков команды (остается для совместимости)
     public LiveData<Resource<List<Player>>> getTeamPlayers(String teamId) {
         MutableLiveData<Resource<List<Player>>> result = new MutableLiveData<>();
         result.setValue(Resource.loading(null));
@@ -336,4 +230,7 @@ public class SportsRepository {
 
         return result;
     }
+
+    // ★ УДАЛЯЕМ метод createItalianTeams() - он больше не нужен ★
+    // ★ УДАЛЯЕМ поле private List<Team> italianTeams - оно больше не нужно ★
 }

@@ -7,22 +7,18 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class TeamsViewModel extends AndroidViewModel {
     private SportsRepository repository;
     private LiveData<List<Team>> favoriteTeams;
     private MutableLiveData<String> currentLeague = new MutableLiveData<>("English Premier League");
 
-    private LiveData<Resource<List<League>>> leagues;
     private LiveData<Resource<List<Team>>> teams;
     private MutableLiveData<List<Team>> filteredTeams = new MutableLiveData<>();
-    private MutableLiveData<Resource<List<Player>>> players = new MutableLiveData<>();
     private MutableLiveData<String> errorMessage = new MutableLiveData<>();
     private MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
+    private MutableLiveData<Resource<List<Player>>> players = new MutableLiveData<>();
 
-    // Для хранения команд из всех лиг
-    private MutableLiveData<Map<String, List<Team>>> allTeamsByLeague = new MutableLiveData<>();
     private List<String> availableLeagues = new ArrayList<>();
 
     public TeamsViewModel(Application application) {
@@ -30,7 +26,7 @@ public class TeamsViewModel extends AndroidViewModel {
         repository = new SportsRepository(application);
         favoriteTeams = repository.getFavoriteTeams();
 
-        // Получаем список доступных лиг
+        // Получаем список доступных лиг из репозитория
         availableLeagues = repository.getAvailableLeagues();
         android.util.Log.d("TeamsViewModel", "Доступно лиг: " + availableLeagues.size());
 
@@ -64,18 +60,11 @@ public class TeamsViewModel extends AndroidViewModel {
                 }
             }
         });
-
-        // Инициализация списка лиг
-        leagues = repository.getLeagues();
     }
 
-    // LiveData для UI
+    // ============ LiveData для UI ============
     public LiveData<List<Team>> getFavoriteTeams() {
         return favoriteTeams;
-    }
-
-    public LiveData<Resource<List<League>>> getLeagues() {
-        return leagues;
     }
 
     public LiveData<Resource<List<Team>>> getTeams() {
@@ -98,10 +87,6 @@ public class TeamsViewModel extends AndroidViewModel {
         return isLoading;
     }
 
-    public LiveData<Map<String, List<Team>>> getAllTeamsByLeague() {
-        return allTeamsByLeague;
-    }
-
     public List<String> getAvailableLeagues() {
         return availableLeagues;
     }
@@ -114,10 +99,10 @@ public class TeamsViewModel extends AndroidViewModel {
         return repository.getTeamByIdFromDb(teamId);
     }
 
-    // Методы для работы с данными
+    // ============ Методы для работы с данными ============
+
     public void setCurrentLeague(String leagueName) {
         if (leagueName != null && !leagueName.isEmpty()) {
-            // Проверяем, что лига есть в списке доступных
             if (availableLeagues.contains(leagueName)) {
                 currentLeague.setValue(leagueName);
                 android.util.Log.d("TeamsViewModel", "Установлена лига: " + leagueName);
@@ -126,20 +111,6 @@ public class TeamsViewModel extends AndroidViewModel {
                 errorMessage.setValue("Лига не найдена: " + leagueName);
             }
         }
-    }
-
-    // Загрузка команд из всех лиг
-    public void loadAllTeamsFromAllLeagues() {
-        isLoading.setValue(true);
-        repository.getAllTeamsFromAllLeagues().observeForever(resource -> {
-            isLoading.setValue(false);
-            if (resource != null && resource.status == Resource.Status.SUCCESS && resource.data != null) {
-                allTeamsByLeague.setValue(resource.data);
-                android.util.Log.d("TeamsViewModel", "Загружены команды из " + resource.data.size() + " лиг");
-            } else if (resource != null && resource.status == Resource.Status.ERROR) {
-                errorMessage.setValue(resource.message);
-            }
-        });
     }
 
     public void loadTeamPlayers(String teamId) {
@@ -152,13 +123,13 @@ public class TeamsViewModel extends AndroidViewModel {
         });
     }
 
-    // Поиск и фильтрация
+    // ============ Поиск ============
+
     public void searchTeams(String query) {
         List<Team> currentFiltered = filteredTeams.getValue();
         if (currentFiltered == null) return;
 
         if (query == null || query.trim().isEmpty()) {
-            // Если запрос пустой, показываем все команды текущей лиги
             Resource<List<Team>> currentTeamsResource = teams.getValue();
             if (currentTeamsResource != null && currentTeamsResource.data != null) {
                 filteredTeams.setValue(currentTeamsResource.data);
@@ -167,42 +138,19 @@ public class TeamsViewModel extends AndroidViewModel {
         }
 
         String searchQuery = query.toLowerCase().trim();
-        List<Team> result = currentFiltered.stream()
-                .filter(team ->
-                        (team.strTeam != null && team.strTeam.toLowerCase().contains(searchQuery)) ||
-                                (team.strLeague != null && team.strLeague.toLowerCase().contains(searchQuery)))
-                .collect(java.util.stream.Collectors.toList());
+        List<Team> result = new ArrayList<>();
+        for (Team team : currentFiltered) {
+            if ((team.strTeam != null && team.strTeam.toLowerCase().contains(searchQuery)) ||
+                    (team.strLeague != null && team.strLeague.toLowerCase().contains(searchQuery))) {
+                result.add(team);
+            }
+        }
 
         filteredTeams.setValue(result);
     }
 
-    public void filterByCountry(String country) {
-        Resource<List<Team>> currentTeams = teams.getValue();
-        if (currentTeams == null || currentTeams.data == null) return;
+    // ============ Избранное ============
 
-        List<Team> allTeams = currentTeams.data;
-
-        if (country == null || country.equals("Все страны")) {
-            filteredTeams.setValue(allTeams);
-            return;
-        }
-
-        List<Team> result = allTeams.stream()
-                .filter(team -> team.strCountry != null &&
-                        team.strCountry.equalsIgnoreCase(country))
-                .collect(java.util.stream.Collectors.toList());
-
-        filteredTeams.setValue(result);
-    }
-
-    public void resetFilter() {
-        Resource<List<Team>> currentTeams = teams.getValue();
-        if (currentTeams != null && currentTeams.data != null) {
-            filteredTeams.setValue(currentTeams.data);
-        }
-    }
-
-    // Избранное
     public void addToFavorites(Team team) {
         if (team != null) {
             repository.addToFavorites(team);
@@ -221,15 +169,17 @@ public class TeamsViewModel extends AndroidViewModel {
         }
     }
 
-    // Перезагрузка данных
+    // ============ Перезагрузка ============
+
     public void reloadTeams() {
         String currentLeagueValue = currentLeague.getValue();
         if (currentLeagueValue != null && !currentLeagueValue.isEmpty()) {
-            currentLeague.setValue(currentLeagueValue); // Триггерим перезагрузку
+            currentLeague.setValue(currentLeagueValue);
         }
     }
 
-    // Получить следующую лигу (для циклического переключения)
+    // ============ Навигация по лигам ============
+
     public void nextLeague() {
         String current = currentLeague.getValue();
         if (current != null && !availableLeagues.isEmpty()) {
@@ -239,7 +189,6 @@ public class TeamsViewModel extends AndroidViewModel {
         }
     }
 
-    // Получить предыдущую лигу
     public void previousLeague() {
         String current = currentLeague.getValue();
         if (current != null && !availableLeagues.isEmpty()) {

@@ -25,17 +25,19 @@ public class FavoritesActivity extends AppCompatActivity {
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // Инициализация адаптера
+        // Инициализация адаптера с передачей всей команды
         adapter = new TeamsAdapter(new TeamsAdapter.OnTeamClickListener() {
             @Override
             public void onTeamClick(Team team) {
-                TeamDetailActivity.start(FavoritesActivity.this, team.idTeam);
+                // Передаем ВСЮ команду
+                TeamDetailActivity.start(FavoritesActivity.this, team);
             }
 
             @Override
             public void onFavoriteClick(Team team, boolean isFavorite) {
                 if (isFavorite) {
                     viewModel.addToFavorites(team);
+                    Snackbar.make(recyclerView, "Добавлено в избранное", Snackbar.LENGTH_SHORT).show();
                 } else {
                     viewModel.removeFromFavorites(team.idTeam);
                     Snackbar.make(recyclerView, "Удалено из избранного", Snackbar.LENGTH_SHORT).show();
@@ -60,5 +62,14 @@ public class FavoritesActivity extends AppCompatActivity {
                 emptyTextView.setText("Нет избранных команд");
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Обновляем данные при возвращении на экран
+        if (viewModel != null) {
+            // ViewModel автоматически обновит LiveData
+        }
     }
 }
