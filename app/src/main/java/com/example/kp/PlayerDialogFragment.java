@@ -75,10 +75,11 @@ public class PlayerDialogFragment extends DialogFragment {
         weight.setText(player.strWeight != null ? "Вес: " + player.strWeight : "Вес: не указан");
         description.setText(player.strDescriptionEN != null ? player.strDescriptionEN : "Описание отсутствует");
 
-        // Загрузка фото с Glide
+        // Загрузка фото с обработкой SVG
         if (player.strThumb != null && !player.strThumb.isEmpty()) {
+            String photoUrl = convertSvgToPngUrl(player.strThumb);
             Glide.with(requireContext())
-                    .load(player.strThumb)
+                    .load(photoUrl)
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .placeholder(R.drawable.ic_person)
                     .error(R.drawable.ic_person)
@@ -89,8 +90,9 @@ public class PlayerDialogFragment extends DialogFragment {
 
         // Загрузка большого фото (cutout)
         if (player.strCutout != null && !player.strCutout.isEmpty()) {
+            String cutoutUrl = convertSvgToPngUrl(player.strCutout);
             Glide.with(requireContext())
-                    .load(player.strCutout)
+                    .load(cutoutUrl)
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .placeholder(R.drawable.ic_person)
                     .error(R.drawable.ic_person)
@@ -101,5 +103,31 @@ public class PlayerDialogFragment extends DialogFragment {
 
         // Кнопка закрытия
         closeButton.setOnClickListener(v -> dismiss());
+    }
+
+    private String convertSvgToPngUrl(String originalUrl) {
+        if (originalUrl == null || originalUrl.isEmpty()) {
+            return originalUrl;
+        }
+
+        // Если это SVG, конвертируем в PNG
+        if (originalUrl.toLowerCase().endsWith(".svg")) {
+            String pngUrl = originalUrl.replace(".svg", ".png");
+
+            // Для Wikimedia используем специальный формат
+            if (pngUrl.contains("wikimedia.org") && pngUrl.contains("/commons/")) {
+                pngUrl = pngUrl.replace("/commons/", "/commons/thumb/");
+
+                int lastSlash = pngUrl.lastIndexOf("/");
+                if (lastSlash != -1) {
+                    String fileName = pngUrl.substring(lastSlash + 1);
+                    pngUrl = pngUrl.substring(0, lastSlash + 1) + "512px-" + fileName;
+                }
+            }
+
+            return pngUrl;
+        }
+
+        return originalUrl;
     }
 }

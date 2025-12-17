@@ -39,16 +39,31 @@ public class SportsRepository {
     }
 
     // --- Работа с избранным ---
+    // В SportsRepository.java обновляем метод addToFavorites:
+    // В методе addToFavorites:
     public void addToFavorites(Team team) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
             try {
                 Team existing = teamDao.getTeamById(team.idTeam);
+
+                if (team.comment == null || team.comment.trim().isEmpty()) {
+                    android.util.Log.w(TAG, "Комментарий пустой");
+                    return;
+                }
+
+                if (team.rating <= 0) {
+                    android.util.Log.w(TAG, "Рейтинг не установлен");
+                    return;
+                }
+
                 if (existing == null) {
                     team.isFavorite = true;
                     teamDao.insert(team);
                     android.util.Log.d(TAG, "Команда добавлена: " + team.strTeam);
                 } else {
                     existing.isFavorite = true;
+                    existing.comment = team.comment;
+                    existing.rating = team.rating;
                     teamDao.update(existing);
                     android.util.Log.d(TAG, "Команда обновлена: " + team.strTeam);
                 }

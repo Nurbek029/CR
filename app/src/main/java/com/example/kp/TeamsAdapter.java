@@ -37,7 +37,10 @@ public class TeamsAdapter extends ListAdapter<Team, TeamsAdapter.TeamViewHolder>
                 @Override
                 public boolean areContentsTheSame(@NonNull Team oldItem, @NonNull Team newItem) {
                     return oldItem.strTeam.equals(newItem.strTeam) &&
-                            oldItem.isFavorite == newItem.isFavorite;
+                            oldItem.isFavorite == newItem.isFavorite &&
+                            oldItem.rating == newItem.rating &&
+                            (oldItem.comment == null ? newItem.comment == null :
+                                    oldItem.comment.equals(newItem.comment));
                 }
             };
 
@@ -51,15 +54,11 @@ public class TeamsAdapter extends ListAdapter<Team, TeamsAdapter.TeamViewHolder>
 
     @Override
     public void onBindViewHolder(@NonNull TeamViewHolder holder, int position) {
-        Team team = getItem(position); // Важно: используем getItem от ListAdapter
+        Team team = getItem(position);
         holder.bind(team, listener);
     }
 
-    // УДАЛЕНО: метод getItemCount() - ListAdapter сам управляет размером
-    // УДАЛЕНО: поле private List<Team> teams и связанная с ним логика
-
     public void setTeams(List<Team> teams) {
-        // Используем submitList для обновления данных в ListAdapter
         submitList(teams != null ? new ArrayList<>(teams) : new ArrayList<>());
     }
 
@@ -87,11 +86,12 @@ public class TeamsAdapter extends ListAdapter<Team, TeamsAdapter.TeamViewHolder>
             teamCountry.setText(team.strCountry != null ? team.strCountry : "");
             teamSport.setText(team.strSport != null ? team.strSport : "");
 
-            // Исправляем ошибку загрузки изображений
             if (team.strBadge != null && !team.strBadge.isEmpty()) {
-                // Используем Glide с обработкой ошибок
+                // Конвертируем SVG URL в PNG URL если нужно
+                String imageUrl = convertSvgToPngUrl(team.strBadge);
+
                 Glide.with(itemView.getContext())
-                        .load(team.strBadge)
+                        .load(imageUrl)
                         .transition(DrawableTransitionOptions.withCrossFade())
                         .placeholder(R.drawable.ic_soccer)
                         .error(R.drawable.ic_soccer)
@@ -100,10 +100,16 @@ public class TeamsAdapter extends ListAdapter<Team, TeamsAdapter.TeamViewHolder>
                 teamBadge.setImageResource(R.drawable.ic_soccer);
             }
 
-            // Обновляем иконку избранного
-            favoriteIcon.setImageResource(
-                    team.isFavorite ? R.drawable.ic_favorite_filled : R.drawable.ic_favorite_border
-            );
+            // ★ ИСПРАВЛЕНА СИНХРОНИЗАЦИЯ ИКОНКИ ★
+            if (team.isFavorite) {
+                // Заполненное сердечко или звезда
+                favoriteIcon.setImageResource(R.drawable.ic_favorite_filled);
+                favoriteIcon.setContentDescription("В избранном");
+            } else {
+                // Пустое сердечко или звезда
+                favoriteIcon.setImageResource(R.drawable.ic_favorite_border);
+                favoriteIcon.setContentDescription("Добавить в избранное");
+            }
 
             favoriteIcon.setOnClickListener(v -> {
                 if (listener != null) {
@@ -116,6 +122,50 @@ public class TeamsAdapter extends ListAdapter<Team, TeamsAdapter.TeamViewHolder>
                     listener.onTeamClick(team);
                 }
             });
+        }
+
+        private String convertSvgToPngUrl(String originalUrl) {
+            if (originalUrl == null || originalUrl.isEmpty()) {
+                return originalUrl;
+            }
+
+            // Если это SVG из Wikimedia, конвертируем в PNG
+            if (originalUrl.contains("wikimedia.org") && originalUrl.toLowerCase().endsWith(".svg")) {
+                // Просто заменяем .svg на .png
+                String pngUrl = originalUrl.replace(".svg", ".png");
+
+                // Для Wikimedia можно использовать более надежный метод
+                if (pngUrl.contains("/commons/")) {
+                    try {
+                        // Формат для Wikimedia: /commons/thumb/.../512px-...
+                        pngUrl = pngUrl.replace("/commons/", "/commons/thumb/");
+
+                        // Добавляем размер
+                        int lastSlash = pngUrl.lastIndexOf("/");
+                        if (lastSlash != -1) {
+                            String fileName = pngUrl.substring(lastSlash + 1);
+                            if (fileName.startsWith("FC_") || fileName.startsWith("File:")) {
+                                pngUrl = pngUrl.substring(0, lastSlash + 1) + "512px-" + fileName;
+                            }
+                        }
+                    } catch (Exception e) {
+                        // Если что-то пошло не так, используем простую замену
+                        pngUrl = originalUrl.replace(".svg", ".png");
+                    }
+                }
+
+                android.util.Log.d("TeamsAdapter", "Конвертирован URL SVG -> PNG: " + originalUrl + " -> " + pngUrl);
+                return pngUrl;
+            }
+
+            // Если это другой SVG источник, тоже попробуем заменить на PNG
+            if (originalUrl.toLowerCase().endsWith(".svg")) {
+                String pngUrl = originalUrl.replace(".svg", ".png");
+                android.util.Log.d("TeamsAdapter", "Конвертирован общий SVG -> PNG: " + originalUrl + " -> " + pngUrl);
+                return pngUrl;
+            }
+
+            return originalUrl;
         }
     }
 }

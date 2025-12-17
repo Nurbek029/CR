@@ -27,7 +27,7 @@
             android:layout_height="24dp"
             android:layout_alignParentEnd="true"
             android:layout_margin="8dp"
-            android:src="@android:drawable/star_big_off" />
+            android:src="@drawable/ic_favorite_border" />
 
         <!-- Название команды -->
         <TextView

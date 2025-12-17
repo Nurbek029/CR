@@ -161,11 +161,5 @@
             android:layout_marginBottom="16dp"
             android:numStars="5"
             android:stepSize="0.5" />
-
-        <Button
-            android:id="@+id/saveCommentButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Сохранить комментарий" />
     </LinearLayout>
 </ScrollView>

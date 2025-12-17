@@ -1,7 +1,6 @@
 package com.example.kp;
 
 import android.content.Intent;
-import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -92,9 +91,10 @@ public class MainActivity extends AppCompatActivity {
             public void onFavoriteClick(Team team, boolean isFavorite) {
                 if (team != null) {
                     if (isFavorite) {
-                        viewModel.addToFavorites(team);
+                        // ★ ПРЕДУПРЕЖДЕНИЕ: нужен комментарий и рейтинг ★
                         Snackbar.make(findViewById(R.id.recyclerView),
-                                "Добавлено в избранное", Snackbar.LENGTH_SHORT).show();
+                                "Чтобы добавить в избранное, перейдите в детали команды и добавьте комментарий с оценкой",
+                                Snackbar.LENGTH_LONG).show();
                     } else {
                         viewModel.removeFromFavorites(team.idTeam);
                         Snackbar.make(findViewById(R.id.recyclerView),
@@ -121,10 +121,48 @@ public class MainActivity extends AppCompatActivity {
 
         android.util.Log.d("MainActivity", "Доступно лиг: " + availableLeaguesKeys.size());
 
+        // ★ ВАЖНОЕ ИЗМЕНЕНИЕ: Подписываемся на избранные команды ★
+        viewModel.getFavoriteTeams().observe(this, favoriteTeams -> {
+            if (favoriteTeams != null) {
+                // Когда меняются избранные, обновляем отображаемые команды
+                List<Team> currentTeams = viewModel.getFilteredTeams().getValue();
+                if (currentTeams != null) {
+                    // Синхронизируем статус избранного
+                    for (Team team : currentTeams) {
+                        for (Team favorite : favoriteTeams) {
+                            if (team.idTeam.equals(favorite.idTeam)) {
+                                team.isFavorite = favorite.isFavorite;
+                                team.comment = favorite.comment;
+                                team.rating = favorite.rating;
+                                break;
+                            }
+                        }
+                    }
+                    adapter.setTeams(currentTeams);
+                }
+            }
+        });
+
         // Наблюдатель за командами
         viewModel.getFilteredTeams().observe(this, teams -> {
             if (teams != null && !teams.isEmpty()) {
                 showTeamsList();
+
+                // ★ СИНХРОНИЗИРУЕМ СО СТАТУСОМ ИЗБРАННОГО ★
+                List<Team> favoriteTeams = viewModel.getFavoriteTeams().getValue();
+                if (favoriteTeams != null) {
+                    for (Team team : teams) {
+                        for (Team favorite : favoriteTeams) {
+                            if (team.idTeam.equals(favorite.idTeam)) {
+                                team.isFavorite = favorite.isFavorite;
+                                team.comment = favorite.comment;
+                                team.rating = favorite.rating;
+                                break;
+                            }
+                        }
+                    }
+                }
+
                 adapter.setTeams(teams);
             } else {
                 showEmptyState("Команды не найдены");
@@ -193,23 +231,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    // ★ НАСТРОЙКА НИЖНЕГО МЕНЮ ★
     private void setupBottomNavigation() {
-        // ★ Устанавливаем цвета программно ★
-        int[][] states = new int[][] {
-                new int[] { android.R.attr.state_checked }, // Выбрано
-                new int[] { -android.R.attr.state_checked } // Не выбрано
-        };
-
-        int[] colors = new int[] {
-                getResources().getColor(R.color.bottom_nav_selected), // Выбрано - фиолетовый
-                getResources().getColor(R.color.bottom_nav_unselected) // Не выбрано - серый
-        };
-
-        ColorStateList colorStateList = new ColorStateList(states, colors);
-        bottomNavigation.setItemIconTintList(colorStateList);
-        bottomNavigation.setItemTextColor(colorStateList);
-
         bottomNavigation.setOnNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
 
@@ -231,12 +253,10 @@ public class MainActivity extends AppCompatActivity {
             return false;
         });
 
-        // Выделяем первый элемент по умолчанию
         bottomNavigation.setSelectedItemId(R.id.nav_teams);
     }
 
     private void loadData() {
-        // Устанавливаем первую лигу по умолчанию
         if (!availableLeaguesKeys.isEmpty()) {
             leagueSpinner.setSelection(0);
         }
@@ -276,9 +296,6 @@ public class MainActivity extends AppCompatActivity {
         filtersContainer.setVisibility(View.VISIBLE);
         findViewById(R.id.recyclerView).setVisibility(View.VISIBLE);
     }
-
-    // ★ УБИРАЕМ ВЕРХНЕЕ МЕНЮ - теперь используем нижнее ★
-    // Удаляем методы onCreateOptionsMenu и onOptionsItemSelected
 
     private void testAllEndpoints() {
         new Thread(() -> {
@@ -333,11 +350,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // При возвращении на экран выделяем первую вкладку
+        // При возвращении на экран обновляем данные
         bottomNavigation.setSelectedItemId(R.id.nav_teams);
 
-        // Обновляем данные если список пуст
-        if (adapter != null && adapter.getItemCount() == 0) {
+        // ★ ОБНОВЛЯЕМ ДАННЫЕ ПРИ ВОЗВРАЩЕНИИ ★
+        if (adapter != null && viewModel != null) {
             viewModel.reloadTeams();
         }
     }

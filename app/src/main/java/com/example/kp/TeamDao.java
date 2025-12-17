@@ -30,4 +30,8 @@ public interface TeamDao {
 
     @Query("DELETE FROM favorite_teams")
     void deleteAll();
+
+    // ★ ДОБАВЬТЕ ЭТОТ МЕТОД ЕСЛИ ЕГО НЕТ ★
+    @Query("SELECT * FROM favorite_teams")
+    LiveData<List<Team>> getAllTeams();
 }

@@ -26,11 +26,9 @@ public class TeamsViewModel extends AndroidViewModel {
         repository = new SportsRepository(application);
         favoriteTeams = repository.getFavoriteTeams();
 
-        // Получаем список доступных лиг из репозитория
         availableLeagues = repository.getAvailableLeagues();
         android.util.Log.d("TeamsViewModel", "Доступно лиг: " + availableLeagues.size());
 
-        // Инициализация преобразованных LiveData
         teams = Transformations.switchMap(currentLeague, league -> {
             if (league != null && !league.isEmpty()) {
                 isLoading.setValue(true);
@@ -39,14 +37,16 @@ public class TeamsViewModel extends AndroidViewModel {
             return new MutableLiveData<>();
         });
 
-        // Наблюдатель за командами
+        // Наблюдатель за командами с синхронизацией избранного
         teams.observeForever(resource -> {
             if (resource != null) {
                 isLoading.setValue(false);
                 switch (resource.status) {
                     case SUCCESS:
                         if (resource.data != null) {
-                            filteredTeams.setValue(resource.data);
+                            // ★ СИНХРОНИЗИРУЕМ СО СТАТУСОМ ИЗБРАННОГО ★
+                            List<Team> teamsWithFavorites = syncTeamsWithFavorites(resource.data);
+                            filteredTeams.setValue(teamsWithFavorites);
                             errorMessage.setValue(null);
                         }
                         break;
@@ -62,7 +62,34 @@ public class TeamsViewModel extends AndroidViewModel {
         });
     }
 
-    // ============ LiveData для UI ============
+    // ★ НОВЫЙ МЕТОД: Синхронизация команд со статусом избранного ★
+    private List<Team> syncTeamsWithFavorites(List<Team> teams) {
+        List<Team> syncedTeams = new ArrayList<>();
+        List<Team> currentFavorites = favoriteTeams.getValue();
+
+        if (currentFavorites == null || currentFavorites.isEmpty()) {
+            return teams;
+        }
+
+        for (Team team : teams) {
+            Team syncedTeam = team;
+            // Ищем команду в избранных
+            for (Team favorite : currentFavorites) {
+                if (team.idTeam.equals(favorite.idTeam)) {
+                    // Копируем статус избранного
+                    syncedTeam.isFavorite = favorite.isFavorite;
+                    syncedTeam.comment = favorite.comment;
+                    syncedTeam.rating = favorite.rating;
+                    break;
+                }
+            }
+            syncedTeams.add(syncedTeam);
+        }
+
+        return syncedTeams;
+    }
+
+    // LiveData для UI
     public LiveData<List<Team>> getFavoriteTeams() {
         return favoriteTeams;
     }
@@ -73,10 +100,6 @@ public class TeamsViewModel extends AndroidViewModel {
 
     public LiveData<List<Team>> getFilteredTeams() {
         return filteredTeams;
-    }
-
-    public LiveData<Resource<List<Player>>> getPlayers() {
-        return players;
     }
 
     public LiveData<String> getErrorMessage() {
@@ -99,31 +122,16 @@ public class TeamsViewModel extends AndroidViewModel {
         return repository.getTeamByIdFromDb(teamId);
     }
 
-    // ============ Методы для работы с данными ============
-
+    // Основные методы
     public void setCurrentLeague(String leagueName) {
         if (leagueName != null && !leagueName.isEmpty()) {
             if (availableLeagues.contains(leagueName)) {
                 currentLeague.setValue(leagueName);
-                android.util.Log.d("TeamsViewModel", "Установлена лига: " + leagueName);
             } else {
-                android.util.Log.w("TeamsViewModel", "Лига не найдена: " + leagueName);
                 errorMessage.setValue("Лига не найдена: " + leagueName);
             }
         }
     }
-
-    public void loadTeamPlayers(String teamId) {
-        if (teamId == null || teamId.isEmpty()) return;
-
-        repository.getTeamPlayers(teamId).observeForever(resource -> {
-            if (resource != null) {
-                players.setValue(resource);
-            }
-        });
-    }
-
-    // ============ Поиск ============
 
     public void searchTeams(String query) {
         List<Team> currentFiltered = filteredTeams.getValue();
@@ -132,7 +140,7 @@ public class TeamsViewModel extends AndroidViewModel {
         if (query == null || query.trim().isEmpty()) {
             Resource<List<Team>> currentTeamsResource = teams.getValue();
             if (currentTeamsResource != null && currentTeamsResource.data != null) {
-                filteredTeams.setValue(currentTeamsResource.data);
+                filteredTeams.setValue(syncTeamsWithFavorites(currentTeamsResource.data));
             }
             return;
         }
@@ -149,8 +157,7 @@ public class TeamsViewModel extends AndroidViewModel {
         filteredTeams.setValue(result);
     }
 
-    // ============ Избранное ============
-
+    // Избранное
     public void addToFavorites(Team team) {
         if (team != null) {
             repository.addToFavorites(team);
@@ -169,8 +176,7 @@ public class TeamsViewModel extends AndroidViewModel {
         }
     }
 
-    // ============ Перезагрузка ============
-
+    // Перезагрузка
     public void reloadTeams() {
         String currentLeagueValue = currentLeague.getValue();
         if (currentLeagueValue != null && !currentLeagueValue.isEmpty()) {
@@ -178,8 +184,7 @@ public class TeamsViewModel extends AndroidViewModel {
         }
     }
 
-    // ============ Навигация по лигам ============
-
+    // Навигация по лигам
     public void nextLeague() {
         String current = currentLeague.getValue();
         if (current != null && !availableLeagues.isEmpty()) {

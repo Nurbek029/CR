@@ -40,19 +40,16 @@ public class Team implements Serializable {
     @SerializedName("strDescriptionEN")
     public String strDescriptionEN = "";
 
-    // ★ ВАЖНО: Это поле должно правильно десериализоваться из JSON ★
     @SerializedName("keyPlayers")
     public List<Player> keyPlayers;
 
-    // Поля для избранного (только в Room)
+    // Поля для избранного
     public String comment = "";
     public float rating = 0f;
     public boolean isFavorite = false;
 
-    // Конструктор для Room
     public Team() {}
 
-    // Геттеры и сеттеры
     public String getIdTeam() {
         return idTeam;
     }

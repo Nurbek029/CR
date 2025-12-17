@@ -68,8 +68,11 @@ public class PlayersAdapter extends RecyclerView.Adapter<PlayersAdapter.PlayerVi
             playerNumber.setText(player.strNumber != null ? "#" + player.strNumber : "#0");
 
             if (player.strThumb != null && !player.strThumb.isEmpty()) {
+                // Конвертируем SVG URL в PNG URL если нужно
+                String imageUrl = convertSvgToPngUrl(player.strThumb);
+
                 Glide.with(itemView.getContext())
-                        .load(player.strThumb)
+                        .load(imageUrl)
                         .transition(DrawableTransitionOptions.withCrossFade())
                         .placeholder(R.drawable.ic_person)
                         .error(R.drawable.ic_person)
@@ -83,6 +86,33 @@ public class PlayersAdapter extends RecyclerView.Adapter<PlayersAdapter.PlayerVi
                     listener.onPlayerClick(player);
                 }
             });
+        }
+
+        private String convertSvgToPngUrl(String originalUrl) {
+            if (originalUrl == null || originalUrl.isEmpty()) {
+                return originalUrl;
+            }
+
+            // Если это SVG, конвертируем в PNG
+            if (originalUrl.toLowerCase().endsWith(".svg")) {
+                String pngUrl = originalUrl.replace(".svg", ".png");
+
+                // Для Wikimedia используем специальный формат
+                if (pngUrl.contains("wikimedia.org") && pngUrl.contains("/commons/")) {
+                    pngUrl = pngUrl.replace("/commons/", "/commons/thumb/");
+
+                    int lastSlash = pngUrl.lastIndexOf("/");
+                    if (lastSlash != -1) {
+                        String fileName = pngUrl.substring(lastSlash + 1);
+                        pngUrl = pngUrl.substring(0, lastSlash + 1) + "256px-" + fileName;
+                    }
+                }
+
+                android.util.Log.d("PlayersAdapter", "Конвертирован URL SVG -> PNG: " + originalUrl + " -> " + pngUrl);
+                return pngUrl;
+            }
+
+            return originalUrl;
         }
     }
 }

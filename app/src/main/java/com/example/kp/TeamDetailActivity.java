@@ -17,7 +17,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.google.android.material.snackbar.Snackbar;
-import java.io.Serializable;
 import java.util.List;
 
 public class TeamDetailActivity extends AppCompatActivity {
@@ -25,13 +24,15 @@ public class TeamDetailActivity extends AppCompatActivity {
     private String teamId;
     private Team currentTeam;
     private PlayersAdapter playersAdapter;
+    private EditText commentEditText;
+    private RatingBar ratingBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_team_detail);
 
-        // Получаем ВСЮ команду из Intent
+        // Получаем команду из Intent
         currentTeam = (Team) getIntent().getSerializableExtra("TEAM");
         if (currentTeam == null || currentTeam.idTeam == null || currentTeam.idTeam.isEmpty()) {
             Snackbar.make(findViewById(android.R.id.content),
@@ -43,16 +44,20 @@ public class TeamDetailActivity extends AppCompatActivity {
         teamId = currentTeam.idTeam;
         viewModel = new ViewModelProvider(this).get(TeamsViewModel.class);
 
-        // Сразу отображаем данные команды
+        // Инициализация полей ввода
+        commentEditText = findViewById(R.id.commentEditText);
+        ratingBar = findViewById(R.id.ratingBar);
+
+        // Отображаем данные команды
         displayTeamDetails(currentTeam);
 
         // Настройка RecyclerView для игроков
         setupPlayersRecyclerView();
 
-        // Отображаем игроков (если они есть в объекте команды)
+        // Отображаем игроков
         displayTeamPlayers(currentTeam.keyPlayers);
 
-        // Наблюдатель за данными команды из базы (для избранного)
+        // Наблюдатель за данными команды из базы
         setupDatabaseObserver();
 
         setupButtons();
@@ -70,11 +75,9 @@ public class TeamDetailActivity extends AppCompatActivity {
 
         playersRecyclerView.setLayoutManager(layoutManager);
 
-        // Обработка кликов на игроков - показываем диалог
         playersAdapter = new PlayersAdapter(new PlayersAdapter.OnPlayerClickListener() {
             @Override
             public void onPlayerClick(Player player) {
-                // Показываем диалог с деталями игрока
                 showPlayerDialog(player);
             }
         });
@@ -83,22 +86,28 @@ public class TeamDetailActivity extends AppCompatActivity {
         playersRecyclerView.setNestedScrollingEnabled(true);
     }
 
-    // Метод для показа диалога с игроком
     private void showPlayerDialog(Player player) {
         PlayerDialogFragment dialog = PlayerDialogFragment.newInstance(player);
         dialog.show(getSupportFragmentManager(), "player_dialog");
     }
 
     private void setupDatabaseObserver() {
-        // Наблюдаем за изменениями избранного в базе данных
         viewModel.getTeamByIdFromDb(teamId).observe(this, teamFromDb -> {
             if (teamFromDb != null && currentTeam != null) {
-                // Обновляем данные из базы
+                // Обновляем текущую команду данными из БД
                 currentTeam.comment = teamFromDb.comment;
                 currentTeam.rating = teamFromDb.rating;
                 currentTeam.isFavorite = teamFromDb.isFavorite;
-                updateFavoriteButton();
+
+                // Обновляем поля ввода
                 updateCommentFields();
+
+                // Обновляем кнопку
+                updateFavoriteButton();
+
+                android.util.Log.d("TeamDetailActivity",
+                        "Данные из БД: isFavorite=" + currentTeam.isFavorite +
+                                ", rating=" + currentTeam.rating);
             }
         });
     }
@@ -108,42 +117,71 @@ public class TeamDetailActivity extends AppCompatActivity {
         favoriteButton.setOnClickListener(v -> {
             if (currentTeam != null) {
                 if (!currentTeam.isFavorite) {
+                    // Получаем данные из полей ввода
+                    String comment = commentEditText.getText().toString().trim();
+                    float rating = ratingBar.getRating();
+
+                    // Проверяем заполненность
+                    if (comment.isEmpty()) {
+                        Snackbar.make(v,
+                                "Пожалуйста, напишите комментарий",
+                                Snackbar.LENGTH_LONG).show();
+                        return;
+                    }
+
+                    if (rating <= 0) {
+                        Snackbar.make(v,
+                                "Пожалуйста, поставьте оценку",
+                                Snackbar.LENGTH_LONG).show();
+                        return;
+                    }
+
+                    // Обновляем данные команды
+                    currentTeam.comment = comment;
+                    currentTeam.rating = rating;
+
+                    // Добавляем в избранное
                     viewModel.addToFavorites(currentTeam);
-                    Snackbar.make(v, "Добавлено в избранное", Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(v, "Добавлено в избранное ✓", Snackbar.LENGTH_SHORT).show();
+
+                    // Обновляем локальный статус
+                    currentTeam.isFavorite = true;
+
                 } else {
+                    // Удаляем из избранного
                     viewModel.removeFromFavorites(currentTeam.idTeam);
                     Snackbar.make(v, "Удалено из избранного", Snackbar.LENGTH_SHORT).show();
+
+                    // Очищаем поля
+                    currentTeam.comment = "";
+                    currentTeam.rating = 0;
+                    currentTeam.isFavorite = false;
+
+                    // Обновляем поля ввода
+                    updateCommentFields();
                 }
-                currentTeam.isFavorite = !currentTeam.isFavorite;
+
                 updateFavoriteButton();
             }
         });
 
-        Button saveCommentButton = findViewById(R.id.saveCommentButton);
-        saveCommentButton.setOnClickListener(v -> {
-            EditText commentEditText = findViewById(R.id.commentEditText);
-            RatingBar ratingBar = findViewById(R.id.ratingBar);
+        // ★ УДАЛЯЕМ кнопку "Сохранить комментарий" - теперь не нужна ★
+        // Вместо нее можно добавить кнопку скрытия игроков
 
-            String comment = commentEditText.getText().toString();
-            float rating = ratingBar.getRating();
-
-            viewModel.updateTeamComment(teamId, comment, rating);
-            Snackbar.make(v, "Комментарий сохранен", Snackbar.LENGTH_SHORT).show();
-        });
-
-        // Кнопка показать/скрыть игроков
         Button togglePlayersButton = findViewById(R.id.togglePlayersButton);
         LinearLayout playersSection = findViewById(R.id.playersSection);
 
-        togglePlayersButton.setOnClickListener(v -> {
-            if (playersSection.getVisibility() == View.VISIBLE) {
-                playersSection.setVisibility(View.GONE);
-                togglePlayersButton.setText("Показать состав");
-            } else {
-                playersSection.setVisibility(View.VISIBLE);
-                togglePlayersButton.setText("Скрыть состав");
-            }
-        });
+        if (togglePlayersButton != null) {
+            togglePlayersButton.setOnClickListener(v -> {
+                if (playersSection.getVisibility() == View.VISIBLE) {
+                    playersSection.setVisibility(View.GONE);
+                    togglePlayersButton.setText("Показать состав");
+                } else {
+                    playersSection.setVisibility(View.VISIBLE);
+                    togglePlayersButton.setText("Скрыть состав");
+                }
+            });
+        }
     }
 
     private void displayTeamDetails(Team team) {
@@ -163,9 +201,14 @@ public class TeamDetailActivity extends AppCompatActivity {
         description.setText(team.strDescriptionEN != null ? team.strDescriptionEN : "Описание отсутствует");
 
         if (team.strBadge != null && !team.strBadge.isEmpty()) {
+            // Преобразуем SVG URL в PNG URL для Wikimedia
+            String imageUrl = convertSvgToPngUrl(team.strBadge);
+
+            // Используем Glide для загрузки изображения
             Glide.with(this)
-                    .load(team.strBadge)
+                    .load(imageUrl)
                     .placeholder(R.drawable.ic_soccer)
+                    .error(R.drawable.ic_soccer)
                     .into(badge);
         } else {
             badge.setImageResource(R.drawable.ic_soccer);
@@ -173,6 +216,35 @@ public class TeamDetailActivity extends AppCompatActivity {
 
         updateFavoriteButton();
         updateCommentFields();
+    }
+
+    private String convertSvgToPngUrl(String originalUrl) {
+        if (originalUrl == null || originalUrl.isEmpty()) {
+            return originalUrl;
+        }
+
+        // Если это SVG из Wikimedia, конвертируем в PNG
+        if (originalUrl.contains("wikimedia.org") && originalUrl.endsWith(".svg")) {
+            // Пример: https://upload.wikimedia.org/wikipedia/commons/0/05/FC_Internazionale_Milano_2021.svg
+            // Конвертируем в PNG версию
+            String pngUrl = originalUrl.replace(".svg", ".png");
+
+            // Альтернативный вариант для Wikimedia
+            if (pngUrl.contains("/commons/")) {
+                pngUrl = pngUrl.replace("/commons/", "/commons/thumb/");
+                // Добавляем размер
+                int lastSlash = pngUrl.lastIndexOf("/");
+                if (lastSlash != -1) {
+                    String fileName = pngUrl.substring(lastSlash + 1);
+                    pngUrl = pngUrl.replace(fileName, "512px-" + fileName);
+                }
+            }
+
+            android.util.Log.d("TeamDetailActivity", "Конвертирован URL: " + originalUrl + " -> " + pngUrl);
+            return pngUrl;
+        }
+
+        return originalUrl;
     }
 
     private void displayTeamPlayers(List<Player> players) {
@@ -183,10 +255,14 @@ public class TeamDetailActivity extends AppCompatActivity {
         if (players != null && !players.isEmpty()) {
             playersTitle.setText("Состав команды (" + players.size() + " игроков)");
             playersAdapter.setPlayers(players);
-            togglePlayersButton.setVisibility(View.VISIBLE);
+            if (togglePlayersButton != null) {
+                togglePlayersButton.setVisibility(View.VISIBLE);
+            }
         } else {
             playersTitle.setText("Информация об игроках отсутствует");
-            togglePlayersButton.setVisibility(View.GONE);
+            if (togglePlayersButton != null) {
+                togglePlayersButton.setVisibility(View.GONE);
+            }
             playersSection.setVisibility(View.GONE);
         }
     }
@@ -194,21 +270,28 @@ public class TeamDetailActivity extends AppCompatActivity {
     private void updateFavoriteButton() {
         Button favoriteButton = findViewById(R.id.favoriteButton);
         if (currentTeam != null) {
-            favoriteButton.setText(currentTeam.isFavorite ?
-                    "Удалить из избранного" : "В избранное");
+            if (currentTeam.isFavorite) {
+                favoriteButton.setText("Удалить из избранного");
+                favoriteButton.setBackgroundColor(getResources().getColor(android.R.color.holo_red_light));
+            } else {
+                favoriteButton.setText("Добавить в избранное");
+                favoriteButton.setBackgroundColor(getResources().getColor(android.R.color.holo_green_light));
+            }
         }
     }
 
     private void updateCommentFields() {
         if (currentTeam != null) {
-            EditText commentEditText = findViewById(R.id.commentEditText);
-            RatingBar ratingBar = findViewById(R.id.ratingBar);
             commentEditText.setText(currentTeam.comment != null ? currentTeam.comment : "");
-            ratingBar.setRating(currentTeam.rating);
+            ratingBar.setRating(currentTeam.rating > 0 ? currentTeam.rating : 0);
+
+            // Подсказки
+            if (currentTeam.comment == null || currentTeam.comment.isEmpty()) {
+                commentEditText.setHint("Напишите комментарий (обязательно для добавления в избранное)");
+            }
         }
     }
 
-    // ★ ДОБАВЛЯЕМ МЕНЮ ДЛЯ ПЕРЕХОДА В ИЗБРАННЫЕ ★
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.team_detail_menu, menu);
@@ -220,7 +303,6 @@ public class TeamDetailActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         if (id == R.id.action_favorites) {
-            // Переход в избранные
             Intent intent = new Intent(this, FavoritesActivity.class);
             startActivity(intent);
             return true;
@@ -229,7 +311,6 @@ public class TeamDetailActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    // Метод для старта активити с передачей команды
     public static void start(AppCompatActivity activity, Team team) {
         Intent intent = new Intent(activity, TeamDetailActivity.class);
         intent.putExtra("TEAM", team);
