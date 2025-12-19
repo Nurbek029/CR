@@ -1,9 +1,7 @@
-package com.example.kp;
+package com.example.kp.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -16,6 +14,12 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
+import com.example.kp.PlayerDialogFragment;
+import com.example.kp.adapters.PlayersAdapter;
+import com.example.kp.R;
+import com.example.kp.TeamsViewModel;
+import com.example.kp.entities.Player;
+import com.example.kp.entities.Team;
 import com.google.android.material.snackbar.Snackbar;
 import java.util.List;
 
@@ -255,21 +259,6 @@ public class TeamDetailActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.team_detail_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.action_favorites) {
-            startActivity(new Intent(this, FavoritesActivity.class));
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
 
     public static void start(AppCompatActivity activity, Team team) {
         Intent intent = new Intent(activity, TeamDetailActivity.class);

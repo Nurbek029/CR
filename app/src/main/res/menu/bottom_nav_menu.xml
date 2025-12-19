@@ -8,12 +8,7 @@
 
     <item
         android:id="@+id/nav_favorites"
-        android:icon="@android:drawable/btn_star_big_on"
+        android:icon="@drawable/ic_favorite_filled"
         android:title="Избранное" />
-
-    <item
-        android:id="@+id/nav_refresh"
-        android:icon="@android:drawable/ic_menu_rotate"
-        android:title="Обновить" />
 
 </menu>

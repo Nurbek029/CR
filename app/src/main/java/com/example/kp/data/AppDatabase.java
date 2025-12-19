@@ -1,10 +1,14 @@
-package com.example.kp;
+package com.example.kp.data;
 
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 import android.content.Context;
+
+import com.example.kp.entities.Player;
+import com.example.kp.entities.Team;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 

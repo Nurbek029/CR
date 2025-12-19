@@ -1,6 +1,8 @@
-package com.example.kp;
+package com.example.kp.data;
 
 import androidx.room.TypeConverter;
+
+import com.example.kp.entities.Player;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;

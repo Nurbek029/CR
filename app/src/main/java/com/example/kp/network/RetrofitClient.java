@@ -1,4 +1,4 @@
-package com.example.kp;
+package com.example.kp.network;
 
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;

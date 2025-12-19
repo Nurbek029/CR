@@ -1,59 +1,82 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="12dp"
-    android:background="?android:attr/selectableItemBackground"
-    android:clickable="true"
-    android:focusable="true">
+    android:layout_marginStart="8dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginBottom="4dp"
+    android:foreground="?android:attr/selectableItemBackground"
+    app:cardBackgroundColor="@color/card_background"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:cardUseCompatPadding="true">
 
-    <!-- Фото игрока -->
-    <ImageView
-        android:id="@+id/playerImage"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:contentDescription="Player image"
-        android:src="@drawable/ic_person"
-        android:scaleType="centerCrop" />
-
-    <!-- Информация об игроке -->
     <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:layout_marginStart="12dp"
-        android:orientation="vertical">
+        android:orientation="horizontal"
+        android:padding="16dp">
 
-        <TextView
-            android:id="@+id/playerName"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Player Name"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+        <!-- Фото игрока -->
+        <ImageView
+            android:id="@+id/playerImage"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:contentDescription="Player image"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_person" />
 
-        <TextView
-            android:id="@+id/playerPosition"
-            android:layout_width="match_parent"
+        <!-- Информация об игроке -->
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Position"
-            android:textSize="14sp"
-            android:layout_marginTop="2dp" />
+            android:layout_weight="1"
+            android:layout_marginStart="16dp"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/playerNumber"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="#0"
-            android:textSize="12sp"
-            android:layout_marginTop="2dp" />
+            <TextView
+                android:id="@+id/playerName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:text="Player Name"
+                android:textColor="@color/text_primary_dark"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/playerPosition"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:text="Position"
+                android:textColor="@color/text_secondary_dark"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/playerNumber"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="#0"
+                android:textColor="@color/primary"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Стрелка -->
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="8dp"
+            android:contentDescription="Подробнее"
+            android:src="@drawable/ic_chevron_right"
+            app:tint="@color/primary" />
     </LinearLayout>
-
-    <!-- Стрелка -->
-    <ImageView
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_gravity="center_vertical"
-        android:src="@android:drawable/ic_media_next" />
-</LinearLayout>
+</androidx.cardview.widget.CardView>

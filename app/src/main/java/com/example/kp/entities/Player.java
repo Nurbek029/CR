@@ -1,4 +1,4 @@
-package com.example.kp;
+package com.example.kp.entities;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;

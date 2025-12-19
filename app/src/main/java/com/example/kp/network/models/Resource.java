@@ -1,4 +1,4 @@
-package com.example.kp;
+package com.example.kp.network.models;
 
 public class Resource<T> {
     public enum Status {

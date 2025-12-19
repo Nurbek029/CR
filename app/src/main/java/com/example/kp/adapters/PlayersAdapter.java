@@ -1,4 +1,4 @@
-package com.example.kp;
+package com.example.kp.adapters;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +9,9 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
+import com.example.kp.R;
+import com.example.kp.entities.Player;
+
 import java.util.ArrayList;
 import java.util.List;
 

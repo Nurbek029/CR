@@ -8,16 +8,17 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/icfut"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@drawable/icfut"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
 
         <!-- Главная активность -->
         <activity
-            android:name=".MainActivity"
+            android:name=".activities.MainActivity"
+            android:windowSoftInputMode="adjustResize"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -27,18 +28,14 @@
 
         <!-- Детали клуба -->
         <activity
-            android:name=".TeamDetailActivity"
+            android:name=".activities.TeamDetailActivity"
             android:exported="false" />
 
         <!-- Избранное -->
         <activity
-            android:name=".FavoritesActivity"
+            android:name=".activities.FavoritesActivity"
+            android:windowSoftInputMode="adjustResize"
             android:exported="false" />
-
-        <activity
-            android:name=".TestApiActivity"
-            android:exported="false"
-            android:theme="@style/Theme.AppCompat.Light.DarkActionBar" />
 
     </application>
 

@@ -1,9 +1,11 @@
-package com.example.kp;
+package com.example.kp.entities;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
+
+import com.example.kp.data.PlayerListConverter;
 import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
 import java.util.List;

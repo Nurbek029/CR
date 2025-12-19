@@ -1,4 +1,7 @@
-package com.example.kp;
+package com.example.kp.network;
+
+import com.example.kp.network.models.PlayerResponse;
+import com.example.kp.network.models.TeamResponse;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
@@ -6,17 +9,15 @@ import retrofit2.http.Query;
 
 public interface ApiService {
     // Существующие методы
-    @GET("all_leagues.php")
-    Call<LeagueResponse> getAllLeagues();
-
-    @GET("searchteams.php")
-    Call<TeamResponse> searchTeams(@Query("t") String query);
 
     @GET("lookup_all_players.php")
     Call<PlayerResponse> getTeamPlayers(@Query("id") String teamId);
 
-    // НОВЫЕ МЕТОДЫ ДЛЯ РАЗНЫХ ЛИГ
-    // Используем один эндпоинт с параметром лиги
+    // Команды по лиге
     @GET("search_all_teams.php")
     Call<TeamResponse> getTeams(@Query("l") String league);
+
+    // ★ НОВЫЙ МЕТОД: Все команды ★
+    @GET("search_all_teams.php")
+    Call<TeamResponse> getAllTeams();
 }

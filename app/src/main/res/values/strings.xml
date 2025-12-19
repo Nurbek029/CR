@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Каталог спортивных клубов</string>
+    <string name="app_name">Football Maneger</string>
 
     <!-- Основной экран -->
     <string name="search_hint">Поиск клубов или лиг...</string>

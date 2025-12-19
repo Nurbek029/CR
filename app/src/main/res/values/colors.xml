@@ -1,27 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- ★ ОСНОВНЫЕ ЦВЕТА ДЛЯ ТЕМЫ ★ -->
-    <color name="primary">#FF6200EE</color>
-    <color name="primary_dark">#FF3700B3</color>
-    <color name="primary_light">#FFBB86FC</color>
+    <!-- ★ ОСНОВНАЯ ЗЕЛЕНАЯ ПАЛИТРА ★ -->
+    <color name="primary">#1B5E20</color>
+    <color name="primary_dark">#0D3C10</color>
+    <color name="primary_light">#4CAF50</color>
+    <color name="primary_variant">#2E7D32</color>
 
-    <!-- ★ Material Design Colors ★ -->
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
+    <!-- ★ АКЦЕНТНЫЕ ЦВЕТА ★ -->
+    <color name="accent">#4CAF50</color>
+    <color name="accent_light">#81C784</color>
+    <color name="secondary">#388E3C</color>
+    <color name="teal_200">#4CAF50</color>
+    <color name="teal_700">#388E3C</color>
 
-    <!-- ★ ЦВЕТА ДЛЯ ТЕКСТА ★ -->
+    <!-- ★ ФОНЫ И ПОВЕРХНОСТИ ★ -->
+    <color name="background_dark">#0A1E0A</color>
+    <color name="background_medium">#1B5E20</color>
+    <color name="background_light">#E8F5E9</color>
+    <color name="surface_white">#FFFFFF</color>
+    <color name="surface_light">#F1F8E9</color>
+
+    <!-- ★ ЦВЕТА КАРТОЧЕК ★ -->
+    <color name="card_background">#FFFFFF</color>
+    <color name="card_background_dark">#2E3D2E</color>
+
+    <!-- ★ ЦВЕТА ТЕКСТА ★ -->
+    <color name="text_primary_dark">#212121</color>
+    <color name="text_secondary_dark">#757575</color>
+    <color name="text_primary_light">#FFFFFF</color>
+    <color name="text_secondary_light">#E0E0E0</color>
+
+    <!-- ★ СТАТУСНЫЕ ЦВЕТА ★ -->
+    <color name="success">#388E3C</color>
+    <color name="warning">#FFA000</color>
+    <color name="error">#D32F2F</color>
+    <color name="info">#2196F3</color>
+
+    <!-- ★ НЕЙТРАЛЬНЫЕ ★ -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-
-    <!-- ★ ОТСУТСТВУЮЩИЕ ЦВЕТА (ДОБАВЬТЕ ЭТИ СТРОКИ) ★ -->
-    <color name="dark_gray">#FF757575</color>
-    <color name="gray">#FF9E9E9E</color>
+    <color name="dark_gray">#FF424242</color>
+    <color name="medium_gray">#FF757575</color>
     <color name="light_gray">#FFE0E0E0</color>
+    <color name="divider">#1E882E</color>
 
-    <!-- ★ ЦВЕТА ДЛЯ НИЖНЕГО МЕНЮ ★ -->
-    <color name="bottom_nav_selected">#FF6200EE</color>
-    <color name="bottom_nav_unselected">#8A000000</color>
+    <!-- ★ ПОЛУПРОЗРАЧНЫЕ ★ -->
+    <color name="overlay_dark_20">#33000000</color>
+    <color name="overlay_dark_50">#80000000</color>
+    <color name="overlay_green_20">#334CAF50</color>
+    <color name="overlay_green_50">#804CAF50</color>
+
+    <!-- ★ НИЖНЕЕ МЕНЮ ★ -->
+    <color name="bottom_nav_selected">#4CAF50</color>
+    <color name="bottom_nav_unselected">#B2D4B2</color>
+    <color name="bottom_nav_background">#1B5E20</color>
+
+    <!-- ★ ЦВЕТА ИЗБРАННОГО ★ -->
+    <color name="favorite_selected">#FF5252</color>
+    <color name="favorite_unselected">#B0BEC5</color>
 </resources>

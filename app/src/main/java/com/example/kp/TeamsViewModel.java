@@ -5,13 +5,18 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
+
+import com.example.kp.entities.Player;
+import com.example.kp.entities.Team;
+import com.example.kp.network.models.Resource;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class TeamsViewModel extends AndroidViewModel {
     private SportsRepository repository;
     private LiveData<List<Team>> favoriteTeams;
-    private MutableLiveData<String> currentLeague = new MutableLiveData<>("English Premier League");
+    private MutableLiveData<String> currentLeague = new MutableLiveData<>("ALL_LEAGUES"); // ★ ИЗМЕНЕНО: по умолчанию "Все лиги"
 
     private LiveData<Resource<List<Team>>> teams;
     private MutableLiveData<List<Team>> filteredTeams = new MutableLiveData<>();
@@ -125,7 +130,8 @@ public class TeamsViewModel extends AndroidViewModel {
     // Основные методы
     public void setCurrentLeague(String leagueName) {
         if (leagueName != null && !leagueName.isEmpty()) {
-            if (availableLeagues.contains(leagueName)) {
+            // ★ ИЗМЕНЕНО: разрешаем "ALL_LEAGUES" и проверяем наличие в списке ★
+            if ("ALL_LEAGUES".equals(leagueName) || availableLeagues.contains(leagueName)) {
                 currentLeague.setValue(leagueName);
             } else {
                 errorMessage.setValue("Лига не найдена: " + leagueName);

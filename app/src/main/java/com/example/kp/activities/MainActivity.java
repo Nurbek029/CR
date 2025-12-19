@@ -1,22 +1,26 @@
-package com.example.kp;
+package com.example.kp.activities;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.kp.R;
+import com.example.kp.adapters.TeamsAdapter;
+import com.example.kp.TeamsViewModel;
+import com.example.kp.entities.Team;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import java.util.ArrayList;
@@ -91,7 +95,6 @@ public class MainActivity extends AppCompatActivity {
             public void onFavoriteClick(Team team, boolean isFavorite) {
                 if (team != null) {
                     if (isFavorite) {
-                        // ★ ПРЕДУПРЕЖДЕНИЕ: нужен комментарий и рейтинг ★
                         Snackbar.make(findViewById(R.id.recyclerView),
                                 "Чтобы добавить в избранное, перейдите в детали команды и добавьте комментарий с оценкой",
                                 Snackbar.LENGTH_LONG).show();
@@ -121,13 +124,11 @@ public class MainActivity extends AppCompatActivity {
 
         android.util.Log.d("MainActivity", "Доступно лиг: " + availableLeaguesKeys.size());
 
-        // ★ ВАЖНОЕ ИЗМЕНЕНИЕ: Подписываемся на избранные команды ★
+        // Подписываемся на избранные команды
         viewModel.getFavoriteTeams().observe(this, favoriteTeams -> {
             if (favoriteTeams != null) {
-                // Когда меняются избранные, обновляем отображаемые команды
                 List<Team> currentTeams = viewModel.getFilteredTeams().getValue();
                 if (currentTeams != null) {
-                    // Синхронизируем статус избранного
                     for (Team team : currentTeams) {
                         for (Team favorite : favoriteTeams) {
                             if (team.idTeam.equals(favorite.idTeam)) {
@@ -148,7 +149,6 @@ public class MainActivity extends AppCompatActivity {
             if (teams != null && !teams.isEmpty()) {
                 showTeamsList();
 
-                // ★ СИНХРОНИЗИРУЕМ СО СТАТУСОМ ИЗБРАННОГО ★
                 List<Team> favoriteTeams = viewModel.getFavoriteTeams().getValue();
                 if (favoriteTeams != null) {
                     for (Team team : teams) {
@@ -188,9 +188,27 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupSearch() {
         SearchView searchView = findViewById(R.id.searchView);
+
+        // ★ ПРОСТОЕ РЕШЕНИЕ: скрываем нижнюю навигацию при фокусе на поиске ★
+        searchView.setOnQueryTextFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    // Когда открываем клавиатуру для поиска - скрываем нижнее меню
+                    bottomNavigation.setVisibility(View.GONE);
+                } else {
+                    // Когда закрываем клавиатуру - показываем нижнее меню
+                    bottomNavigation.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
+                // Скрываем клавиатуру при нажатии Enter
+                searchView.clearFocus();
+                hideKeyboard();
                 return false;
             }
 
@@ -200,6 +218,15 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
+    }
+
+    // ★ ПРОСТОЙ МЕТОД ДЛЯ СКРЫТИЯ КЛАВИАТУРЫ ★
+    private void hideKeyboard() {
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
     }
 
     private void setupLeagueFilter() {
@@ -243,13 +270,6 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
                 return true;
             }
-            else if (id == R.id.nav_refresh) {
-                viewModel.reloadTeams();
-                Snackbar.make(findViewById(R.id.recyclerView),
-                        "Обновление данных...", Snackbar.LENGTH_SHORT).show();
-                return true;
-            }
-
             return false;
         });
 
@@ -297,63 +317,16 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.recyclerView).setVisibility(View.VISIBLE);
     }
 
-    private void testAllEndpoints() {
-        new Thread(() -> {
-            try {
-                StringBuilder results = new StringBuilder();
-                results.append("=== ТЕСТИРОВАНИЕ API ЭНДПОЙНТОВ ===\n\n");
-
-                String[] urls = RetrofitClient.getLeagueUrls();
-
-                for (int i = 0; i < urls.length; i++) {
-                    String url = urls[i];
-                    results.append("Тест ").append(i + 1).append(": ").append(url).append("\n");
-
-                    try {
-                        java.net.URL testUrl = new java.net.URL(url);
-                        java.net.HttpURLConnection conn = (java.net.HttpURLConnection) testUrl.openConnection();
-                        conn.setRequestMethod("GET");
-                        conn.setConnectTimeout(5000);
-                        conn.setReadTimeout(5000);
-
-                        int responseCode = conn.getResponseCode();
-                        results.append("Код: ").append(responseCode).append("\n");
-
-                        conn.disconnect();
-
-                    } catch (Exception e) {
-                        results.append("Ошибка: ").append(e.getMessage()).append("\n");
-                    }
-
-                    results.append("\n");
-                }
-
-                final String finalResults = results.toString();
-
-                runOnUiThread(() -> {
-                    android.util.Log.d("API_TEST", finalResults);
-                    Toast.makeText(MainActivity.this,
-                            "Тестирование завершено. Смотрите логи (API_TEST)",
-                            Toast.LENGTH_LONG).show();
-                });
-
-            } catch (Exception e) {
-                runOnUiThread(() -> {
-                    Toast.makeText(MainActivity.this,
-                            "Ошибка тестирования: " + e.getMessage(),
-                            Toast.LENGTH_LONG).show();
-                });
-            }
-        }).start();
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
         // При возвращении на экран обновляем данные
         bottomNavigation.setSelectedItemId(R.id.nav_teams);
 
-        // ★ ОБНОВЛЯЕМ ДАННЫЕ ПРИ ВОЗВРАЩЕНИИ ★
+        // Убедимся, что нижнее меню видимо
+        bottomNavigation.setVisibility(View.VISIBLE);
+
+        // Обновляем данные при возвращении
         if (adapter != null && viewModel != null) {
             viewModel.reloadTeams();
         }

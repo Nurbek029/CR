@@ -1,10 +1,12 @@
-package com.example.kp;
+package com.example.kp.data;
 
-import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
+
+import com.example.kp.entities.Player;
+
 import java.util.List;
 
 @Dao

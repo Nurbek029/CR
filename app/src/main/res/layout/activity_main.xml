@@ -3,39 +3,63 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@drawable/gradient_background"
+    android:fitsSystemWindows="true">
 
     <!-- Основной контент -->
     <LinearLayout
-        android:id="@+id/linearLayout"
+        android:id="@+id/mainContent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="56dp"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingBottom="72dp"> <!-- Отступ для меню -->
 
         <!-- Поиск -->
-
-        <!-- Фильтр лиг -->
         <androidx.appcompat.widget.SearchView
             android:id="@+id/searchView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/search_view_background"
+            android:elevation="4dp"
             android:queryHint="Поиск команд..."
-            app:iconifiedByDefault="false" />
+            app:iconifiedByDefault="false"
+            app:queryBackground="@drawable/search_view_query_background" />
 
+        <!-- Фильтр лиг -->
         <LinearLayout
             android:id="@+id/filtersContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@android:color/white"
-            android:orientation="horizontal"
-            android:padding="8dp">
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/card_gradient"
+            android:elevation="6dp"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Выберите лигу"
+                android:textColor="@color/text_primary_dark"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
 
             <Spinner
                 android:id="@+id/leagueSpinner"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="8dp" />
+                android:layout_height="56dp"
+                android:background="@drawable/spinner_background"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:popupBackground="@drawable/spinner_dropdown_background" />
 
         </LinearLayout>
 
@@ -51,14 +75,16 @@
 
             <ProgressBar
                 android:id="@+id/progressBar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_marginBottom="24dp"
+                android:indeterminateTint="@color/accent" />
 
             <TextView
                 android:id="@+id/errorTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@android:color/holo_red_dark"
+                android:textColor="@color/error"
                 android:textSize="16sp"
                 android:visibility="gone" />
 
@@ -67,17 +93,25 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Нет данных"
+                android:textColor="@color/text_secondary_dark"
                 android:textSize="16sp"
                 android:visibility="gone" />
 
         </LinearLayout>
 
+        <!-- Список команд -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"
             android:layout_width="match_parent"
-            android:layout_height="466dp" />
-
-        <!-- Список команд -->
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="16dp"
+            android:clipToPadding="false"
+            android:paddingTop="8dp"
+            android:paddingBottom="24dp" />
 
     </LinearLayout>
 
@@ -85,10 +119,11 @@
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
-        android:layout_height="156dp"
+        android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="?android:attr/windowBackground"
-        app:menu="@menu/bottom_nav_menu"
-        app:labelVisibilityMode="labeled" />
+        android:background="@drawable/bottom_nav_background"
+        android:elevation="16dp"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/bottom_nav_menu" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -3,6 +3,17 @@ package com.example.kp;
 import android.app.Application;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+
+import com.example.kp.data.AppDatabase;
+import com.example.kp.data.TeamDao;
+import com.example.kp.entities.Player;
+import com.example.kp.entities.Team;
+import com.example.kp.network.ApiService;
+import com.example.kp.network.RetrofitClient;
+import com.example.kp.network.models.PlayerResponse;
+import com.example.kp.network.models.Resource;
+import com.example.kp.network.models.TeamResponse;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -19,6 +30,7 @@ public class SportsRepository {
 
     // Список лиг
     private final Map<String, String> leagueDisplayNames = new HashMap<String, String>() {{
+        put("ALL_LEAGUES", "Все лиги"); // Новый пункт
         put("English Premier League", "Английская Премьер-лига");
         put("Spanish La Liga", "Испанская Ла Лига");
         put("German Bundesliga", "Немецкая Бундеслига");
@@ -39,8 +51,6 @@ public class SportsRepository {
     }
 
     // --- Работа с избранным ---
-    // В SportsRepository.java обновляем метод addToFavorites:
-    // В методе addToFavorites:
     public void addToFavorites(Team team) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
             try {
@@ -130,77 +140,101 @@ public class SportsRepository {
         return leagueDisplayNames.getOrDefault(leagueKey, leagueKey);
     }
 
-    // Основной метод получения команд по лиге - ТОЛЬКО API
+    // Основной метод получения команд по лиге или всех команд
     public LiveData<Resource<List<Team>>> getTeamsByLeague(String leagueName) {
         MutableLiveData<Resource<List<Team>>> result = new MutableLiveData<>();
         result.setValue(Resource.loading(null));
 
-        android.util.Log.d(TAG, "Запрос команд для лиги: " + leagueName);
+        android.util.Log.d(TAG, "Запрос команд для: " + leagueName);
 
         if (leagueName == null || leagueName.isEmpty()) {
             result.setValue(Resource.error("Название лиги не указано", null));
             return result;
         }
 
-        // Проверяем, поддерживается ли лига
-        if (!leagueDisplayNames.containsKey(leagueName)) {
-            android.util.Log.w(TAG, "Лига не найдена в списке: " + leagueName);
-            result.setValue(Resource.error("Лига не поддерживается: " + leagueName, null));
-            return result;
-        }
+        // ★ НОВАЯ ЛОГИКА: если выбраны "Все лиги" ★
+        if ("ALL_LEAGUES".equals(leagueName)) {
+            // Запрашиваем все команды без фильтрации по лиге
+            Call<TeamResponse> call = apiService.getAllTeams(); // Новый метод API
+            call.enqueue(new Callback<TeamResponse>() {
+                @Override
+                public void onResponse(Call<TeamResponse> call, Response<TeamResponse> response) {
+                    handleTeamsResponse(leagueName, response, result);
+                }
 
-        // ★ ВАЖНОЕ ИЗМЕНЕНИЕ: ДЛЯ ВСЕХ ЛИГ ИСПОЛЬЗУЕМ API ★
-        Call<TeamResponse> call = apiService.getTeams(leagueName);
-        call.enqueue(new Callback<TeamResponse>() {
-            @Override
-            public void onResponse(Call<TeamResponse> call, Response<TeamResponse> response) {
-                android.util.Log.d(TAG, "Ответ на запрос команд. Код: " + response.code());
-                android.util.Log.d(TAG, "URL запроса: " + call.request().url());
-
-                if (response.isSuccessful() && response.body() != null) {
-                    List<Team> teams = response.body().teams;
-                    android.util.Log.d(TAG, "Получено команд: " + (teams != null ? teams.size() : 0));
-
-                    if (teams != null && !teams.isEmpty()) {
-                        // Логируем полученные команды для отладки
-                        for (int i = 0; i < Math.min(3, teams.size()); i++) {
-                            Team team = teams.get(i);
-                            android.util.Log.d(TAG, "Команда " + (i+1) + ": " +
-                                    team.strTeam + " (игроков: " +
-                                    (team.keyPlayers != null ? team.keyPlayers.size() : 0) + ")");
-                        }
-
-                        result.setValue(Resource.success(teams));
-                    } else {
-                        android.util.Log.w(TAG, "Пустой список команд для лиги: " + leagueName);
-                        result.setValue(Resource.error("Нет команд в лиге: " + leagueName, null));
-                    }
-                } else {
-                    String errorMsg = "Ошибка API: " + response.code();
-                    if (response.errorBody() != null) {
-                        try {
-                            errorMsg += " - " + response.errorBody().string();
-                        } catch (Exception e) {
-                            errorMsg += " - не удалось прочитать ошибку";
-                        }
-                    }
-                    android.util.Log.e(TAG, errorMsg);
+                @Override
+                public void onFailure(Call<TeamResponse> call, Throwable t) {
+                    String errorMsg = "Ошибка сети при запросе всех команд: " + t.getMessage();
+                    android.util.Log.e(TAG, errorMsg, t);
                     result.setValue(Resource.error(errorMsg, null));
                 }
+            });
+        } else {
+            // Старая логика для конкретной лиги
+            // Проверяем, поддерживается ли лига
+            if (!leagueDisplayNames.containsKey(leagueName)) {
+                android.util.Log.w(TAG, "Лига не найдена в списке: " + leagueName);
+                result.setValue(Resource.error("Лига не поддерживается: " + leagueName, null));
+                return result;
             }
 
-            @Override
-            public void onFailure(Call<TeamResponse> call, Throwable t) {
-                String errorMsg = "Ошибка сети при запросе команд: " + t.getMessage();
-                android.util.Log.e(TAG, errorMsg, t);
-                result.setValue(Resource.error(errorMsg, null));
-            }
-        });
+            Call<TeamResponse> call = apiService.getTeams(leagueName);
+            call.enqueue(new Callback<TeamResponse>() {
+                @Override
+                public void onResponse(Call<TeamResponse> call, Response<TeamResponse> response) {
+                    handleTeamsResponse(leagueName, response, result);
+                }
+
+                @Override
+                public void onFailure(Call<TeamResponse> call, Throwable t) {
+                    String errorMsg = "Ошибка сети при запросе команд: " + t.getMessage();
+                    android.util.Log.e(TAG, errorMsg, t);
+                    result.setValue(Resource.error(errorMsg, null));
+                }
+            });
+        }
 
         return result;
     }
 
-    // Метод для получения игроков команды (остается для совместимости)
+    // ★ НОВЫЙ МЕТОД: обработка ответа команд ★
+    private void handleTeamsResponse(String leagueName, Response<TeamResponse> response,
+                                     MutableLiveData<Resource<List<Team>>> result) {
+        android.util.Log.d(TAG, "Ответ на запрос команд. Код: " + response.code());
+        android.util.Log.d(TAG, "Запрошенная лига: " + leagueName);
+
+        if (response.isSuccessful() && response.body() != null) {
+            List<Team> teams = response.body().teams;
+            android.util.Log.d(TAG, "Получено команд: " + (teams != null ? teams.size() : 0));
+
+            if (teams != null && !teams.isEmpty()) {
+                // Логируем первые 3 команды для отладки
+                for (int i = 0; i < Math.min(3, teams.size()); i++) {
+                    Team team = teams.get(i);
+                    android.util.Log.d(TAG, "Команда " + (i+1) + ": " +
+                            team.strTeam + " (лига: " + team.strLeague + ")");
+                }
+
+                result.setValue(Resource.success(teams));
+            } else {
+                android.util.Log.w(TAG, "Пустой список команд для: " + leagueName);
+                result.setValue(Resource.error("Нет команд для: " + leagueName, null));
+            }
+        } else {
+            String errorMsg = "Ошибка API: " + response.code();
+            if (response.errorBody() != null) {
+                try {
+                    errorMsg += " - " + response.errorBody().string();
+                } catch (Exception e) {
+                    errorMsg += " - не удалось прочитать ошибку";
+                }
+            }
+            android.util.Log.e(TAG, errorMsg);
+            result.setValue(Resource.error(errorMsg, null));
+        }
+    }
+
+    // Метод для получения игроков команды
     public LiveData<Resource<List<Player>>> getTeamPlayers(String teamId) {
         MutableLiveData<Resource<List<Player>>> result = new MutableLiveData<>();
         result.setValue(Resource.loading(null));
@@ -245,7 +279,4 @@ public class SportsRepository {
 
         return result;
     }
-
-    // ★ УДАЛЯЕМ метод createItalianTeams() - он больше не нужен ★
-    // ★ УДАЛЯЕМ поле private List<Team> italianTeams - оно больше не нужно ★
 }
