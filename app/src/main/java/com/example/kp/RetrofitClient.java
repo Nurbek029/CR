@@ -11,7 +11,7 @@ public class RetrofitClient {
     private static Retrofit retrofit;
 
     // Убедитесь, что BASE_URL соответствует вашему mock-серверу
-    private static final String BASE_URL = "https://02721d2d-8318-4cfe-ab98-2bd86c41dd8b.mock.pstmn.io/";
+    private static final String BASE_URL = "https://142a0fac-4d4a-48d4-98ac-a8cce9355e0a.mock.pstmn.io/";
 
     public static Retrofit getInstance() {
         if (retrofit == null) {

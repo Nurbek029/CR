@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -86,27 +85,23 @@ public class TeamsAdapter extends ListAdapter<Team, TeamsAdapter.TeamViewHolder>
             teamCountry.setText(team.strCountry != null ? team.strCountry : "");
             teamSport.setText(team.strSport != null ? team.strSport : "");
 
-            if (team.strBadge != null && !team.strBadge.isEmpty()) {
-                // Конвертируем SVG URL в PNG URL если нужно
-                String imageUrl = convertSvgToPngUrl(team.strBadge);
-
+            // ⭐ ВАЖНОЕ ИЗМЕНЕНИЕ: убираем .placeholder() при успешной загрузке
+            int badgeResId = getTeamBadgeResource(team.idTeam);
+            if (badgeResId != R.drawable.ic_soccer) {
+                // Если есть реальное изображение - загружаем БЕЗ placeholder
                 Glide.with(itemView.getContext())
-                        .load(imageUrl)
-                        .transition(DrawableTransitionOptions.withCrossFade())
-                        .placeholder(R.drawable.ic_soccer)
-                        .error(R.drawable.ic_soccer)
+                        .load(badgeResId)
+                        .error(R.drawable.ic_soccer) // Только error, без placeholder
                         .into(teamBadge);
             } else {
+                // Если нет изображения - показываем заглушку
                 teamBadge.setImageResource(R.drawable.ic_soccer);
             }
 
-            // ★ ИСПРАВЛЕНА СИНХРОНИЗАЦИЯ ИКОНКИ ★
             if (team.isFavorite) {
-                // Заполненное сердечко или звезда
                 favoriteIcon.setImageResource(R.drawable.ic_favorite_filled);
                 favoriteIcon.setContentDescription("В избранном");
             } else {
-                // Пустое сердечко или звезда
                 favoriteIcon.setImageResource(R.drawable.ic_favorite_border);
                 favoriteIcon.setContentDescription("Добавить в избранное");
             }
@@ -124,48 +119,46 @@ public class TeamsAdapter extends ListAdapter<Team, TeamsAdapter.TeamViewHolder>
             });
         }
 
-        private String convertSvgToPngUrl(String originalUrl) {
-            if (originalUrl == null || originalUrl.isEmpty()) {
-                return originalUrl;
+        // ⭐ ОБНОВЛЕННЫЙ МЕТОД ДЛЯ ВСЕХ ЛИГ
+        private int getTeamBadgeResource(String teamId) {
+            switch (teamId) {
+                // English Premier League
+                case "EPL1": return R.drawable.manchesterunited;
+                case "EPL2": return R.drawable.manchestercity;
+                case "EPL3": return R.drawable.liverpoolfc;
+                case "EPL4": return R.drawable.arsenalfc;
+                case "EPL5": return R.drawable.chelseafc;
+
+                // Italian Serie A
+                case "SA1": return R.drawable.inter_milan;
+                case "SA2": return R.drawable.ac_milan;
+                case "SA3": return R.drawable.juventus;
+                case "SA4": return R.drawable.as_roma;
+                case "SA5": return R.drawable.napoli;
+
+                // Spanish La Liga
+                case "LL1": return R.drawable.real_madrid;
+                case "LL2": return R.drawable.barcelona;
+                case "LL3": return R.drawable.atletico_madrid;
+                case "LL4": return R.drawable.sevilla;
+                case "LL5": return R.drawable.valencia;
+
+                // German Bundesliga
+                case "BL1": return R.drawable.bayern_munich;
+                case "BL2": return R.drawable.borussia_dortmund;
+                case "BL3": return R.drawable.rb_leipzig;
+                case "BL4": return R.drawable.bayer_leverkusen;
+                case "BL5": return R.drawable.eintracht_frankfurt;
+
+                // French Ligue 1
+                case "FL1": return R.drawable.psg;
+                case "FL2": return R.drawable.marseille;
+                case "FL3": return R.drawable.lyon;
+                case "FL4": return R.drawable.monaco;
+                case "FL5": return R.drawable.lille;
+
+                default: return R.drawable.ic_soccer;
             }
-
-            // Если это SVG из Wikimedia, конвертируем в PNG
-            if (originalUrl.contains("wikimedia.org") && originalUrl.toLowerCase().endsWith(".svg")) {
-                // Просто заменяем .svg на .png
-                String pngUrl = originalUrl.replace(".svg", ".png");
-
-                // Для Wikimedia можно использовать более надежный метод
-                if (pngUrl.contains("/commons/")) {
-                    try {
-                        // Формат для Wikimedia: /commons/thumb/.../512px-...
-                        pngUrl = pngUrl.replace("/commons/", "/commons/thumb/");
-
-                        // Добавляем размер
-                        int lastSlash = pngUrl.lastIndexOf("/");
-                        if (lastSlash != -1) {
-                            String fileName = pngUrl.substring(lastSlash + 1);
-                            if (fileName.startsWith("FC_") || fileName.startsWith("File:")) {
-                                pngUrl = pngUrl.substring(0, lastSlash + 1) + "512px-" + fileName;
-                            }
-                        }
-                    } catch (Exception e) {
-                        // Если что-то пошло не так, используем простую замену
-                        pngUrl = originalUrl.replace(".svg", ".png");
-                    }
-                }
-
-                android.util.Log.d("TeamsAdapter", "Конвертирован URL SVG -> PNG: " + originalUrl + " -> " + pngUrl);
-                return pngUrl;
-            }
-
-            // Если это другой SVG источник, тоже попробуем заменить на PNG
-            if (originalUrl.toLowerCase().endsWith(".svg")) {
-                String pngUrl = originalUrl.replace(".svg", ".png");
-                android.util.Log.d("TeamsAdapter", "Конвертирован общий SVG -> PNG: " + originalUrl + " -> " + pngUrl);
-                return pngUrl;
-            }
-
-            return originalUrl;
         }
     }
 }
