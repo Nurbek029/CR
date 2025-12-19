@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/gradient_background"
+    android:fitsSystemWindows="true">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingTop="24dp"
+        android:paddingBottom="88dp"> <!-- УВЕЛИЧЕН для нижнего меню -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="32dp"> <!-- Дополнительный отступ -->
+
+            <!-- Карточка с информацией о команде -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:cardBackgroundColor="@color/card_background"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="8dp"
+                app:cardUseCompatPadding="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <!-- Заголовок команды -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+
+                        <ImageView
+                            android:id="@+id/teamBadge"
+                            android:layout_width="80dp"
+                            android:layout_height="80dp"
+                            android:contentDescription="Team badge"
+                            android:src="@drawable/ic_soccer" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="16dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/teamName"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Team Name"
+                                android:textColor="@color/text_primary_dark"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/teamLeague"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="League"
+                                android:textColor="@color/primary"
+                                android:textSize="16sp" />
+
+                            <TextView
+                                android:id="@+id/teamCountry"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Country"
+                                android:textColor="@color/text_secondary_dark"
+                                android:textSize="14sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Стадион и год основания -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:id="@+id/teamStadium"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Stadium"
+                            android:textColor="@color/text_primary_dark"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/teamYear"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Year"
+                            android:textColor="@color/text_primary_dark"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <!-- Описание -->
+                    <TextView
+                        android:id="@+id/teamDescription"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:text="Description"
+                        android:textColor="@color/text_secondary_dark"
+                        android:textSize="14sp"
+                        android:lineSpacingExtra="4dp" />
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- ★ ИСПРАВЛЕННЫЕ КНОПКИ с фиксированной высотой ★ -->
+            <Button
+                android:id="@+id/favoriteButton"
+                android:layout_width="match_parent"
+                android:layout_height="66dp"
+            android:layout_marginBottom="12dp"
+            android:text="Добавить в избранное"
+            android:textAllCaps="false"
+            android:textSize="16sp"
+            android:singleLine="false"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            style="@style/Widget.KP.Button" />
+
+            <Button
+                android:id="@+id/togglePlayersButton"
+                android:layout_width="match_parent"
+                android:layout_height="66dp"
+            android:layout_marginBottom="20dp"
+            android:text="Показать состав команды"
+            android:textAllCaps="false"
+            android:textSize="16sp"
+            android:singleLine="false"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            style="@style/Widget.KP.Button"
+            app:backgroundTint="@color/secondary" />
+
+            <!-- Секция игроков -->
+            <LinearLayout
+                android:id="@+id/playersSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginBottom="20dp">
+
+                <TextView
+                    android:id="@+id/playersTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:text="Состав команды"
+                    android:textColor="@color/text_primary_dark"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/playersRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="400dp"
+                    android:background="@drawable/card_gradient"
+                    android:padding="12dp"
+                    android:nestedScrollingEnabled="true" />
+            </LinearLayout>
+
+            <!-- Карточка с комментариями и рейтингом -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                app:cardBackgroundColor="@color/card_background"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="6dp"
+                app:cardUseCompatPadding="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:text="Ваш комментарий"
+                        android:textColor="@color/text_primary_dark"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/commentEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="120dp"
+                        android:layout_marginBottom="16dp"
+                        android:background="@drawable/edit_text_background"
+                        android:gravity="top"
+                        android:hint="Напишите ваш комментарий..."
+                        android:inputType="textMultiLine"
+                        android:padding="12dp"
+                        android:textColor="@color/text_primary_dark"
+                        android:textColorHint="@color/text_secondary_dark" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:text="Ваша оценка"
+                        android:textColor="@color/text_primary_dark"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <RatingBar
+                        android:id="@+id/ratingBar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginBottom="8dp"
+                        android:numStars="5"
+                        android:progressTint="@color/accent"
+                        android:rating="0"
+                        android:stepSize="0.5" />
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+    </ScrollView>
+
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -1,3 +1,30 @@
 <resources>
-    <string name="app_name">KP</string>
+    <string name="app_name">Football Maneger</string>
+
+    <!-- Основной экран -->
+    <string name="search_hint">Поиск клубов или лиг...</string>
+    <string name="filter_label">Фильтр:</string>
+    <string name="reset_filter">Сброс</string>
+
+    <!-- Детали клуба -->
+    <string name="club_info">Информация о клубе</string>
+    <string name="country">Страна:</string>
+    <string name="stadium">Стадион:</string>
+    <string name="founded">Основан:</string>
+    <string name="description">Описание</string>
+    <string name="players">Основные игроки</string>
+    <string name="comment_hint">Введите ваш комментарий...</string>
+    <string name="save_comment">Сохранить комментарий</string>
+    <string name="add_to_favorites">Добавить в избранное</string>
+    <string name="remove_from_favorites">Удалить из избранного</string>
+
+    <!-- Избранное -->
+    <string name="favorites">Избранное</string>
+    <string name="no_favorites">Нет избранных клубов</string>
+
+    <!-- Меню -->
+    <string name="favorites_menu">Избранное</string>
+    <string name="refresh">Обновить</string>
+    <string name="filter_menu">Фильтры</string>
+    <string name="settings">Настройки</string>
 </resources>
