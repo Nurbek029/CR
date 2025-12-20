@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/gradient_background"
     android:fitsSystemWindows="true"
-    tools:context=".activities.FavoritesActivity">
+    tools:context=".ui.FavoritesActivity">
 
     <!-- Вся структура в одном ScrollView -->
     <androidx.core.widget.NestedScrollView

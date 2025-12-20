@@ -1,4 +1,4 @@
-package com.example.kp.activities;
+package com.example.kp.ui;
 
 import android.os.Bundle;
 import android.view.View;
@@ -11,8 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.kp.R;
-import com.example.kp.adapters.TeamsAdapter;
-import com.example.kp.TeamsViewModel;
+import com.example.kp.viewmodel.TeamsViewModel;
 import com.example.kp.entities.Team;
 import com.google.android.material.snackbar.Snackbar;
 import java.util.ArrayList;

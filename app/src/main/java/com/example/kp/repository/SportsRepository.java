@@ -1,4 +1,4 @@
-package com.example.kp;
+package com.example.kp.repository;
 
 import android.app.Application;
 import androidx.lifecycle.LiveData;

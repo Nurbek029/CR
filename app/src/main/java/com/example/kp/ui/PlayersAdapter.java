@@ -1,4 +1,4 @@
-package com.example.kp.adapters;
+package com.example.kp.ui;
 
 import android.view.LayoutInflater;
 import android.view.View;

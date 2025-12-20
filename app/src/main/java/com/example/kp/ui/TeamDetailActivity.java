@@ -1,4 +1,4 @@
-package com.example.kp.activities;
+package com.example.kp.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -14,10 +14,8 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
-import com.example.kp.PlayerDialogFragment;
-import com.example.kp.adapters.PlayersAdapter;
 import com.example.kp.R;
-import com.example.kp.TeamsViewModel;
+import com.example.kp.viewmodel.TeamsViewModel;
 import com.example.kp.entities.Player;
 import com.example.kp.entities.Team;
 import com.google.android.material.snackbar.Snackbar;
