@@ -1,4 +1,4 @@
-package com.example.kp;
+package com.example.kp.viewmodel;
 
 import android.app.Application;
 import androidx.lifecycle.AndroidViewModel;
@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
+import com.example.kp.repository.SportsRepository;
 import com.example.kp.entities.Player;
 import com.example.kp.entities.Team;
 import com.example.kp.network.models.Resource;
